@@ -1,0 +1,124 @@
+import { useEffect } from "react";
+import { Link } from "react-router-dom";
+import { ArrowRight, Link2, MousePointerClick, TrendingUp } from "lucide-react";
+import { useAuthStore } from "@/features/auth/store/authStore";
+import { useLinksStore } from "../store/linksStore";
+import { CreateLinkForm } from "../components/CreateLinkForm";
+import { LinkCard } from "../components/LinkCard";
+import { Card, CardContent } from "@/shared/components/ui/card";
+import { Button } from "@/shared/components/ui/button";
+import { Skeleton } from "@/shared/components/ui/skeleton";
+import { formatNumber } from "@/shared/lib/utils";
+
+function StatCard({
+  label,
+  value,
+  icon: Icon,
+  isLoading,
+}: {
+  label: string;
+  value: string;
+  icon: React.ElementType;
+  isLoading: boolean;
+}) {
+  return (
+    <Card>
+      <CardContent className="p-5 flex items-center gap-4">
+        <div className="p-2 rounded-md bg-primary/10">
+          <Icon className="h-5 w-5 text-primary" />
+        </div>
+        <div>
+          <p className="text-xs text-muted-foreground uppercase tracking-wide">{label}</p>
+          {isLoading ? (
+            <Skeleton className="h-7 w-16 mt-1" />
+          ) : (
+            <p className="text-2xl font-bold">{value}</p>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export function DashboardPage() {
+  const { user } = useAuthStore();
+  const { links, pagination, isLoading, fetchLinks } = useLinksStore();
+
+  useEffect(() => {
+    fetchLinks(1);
+  }, [fetchLinks]);
+
+  const totalClicks = links.reduce((sum, l) => sum + l.click_count, 0);
+  const activeLinks = links.filter((l) => l.is_active && !l.is_expired).length;
+  const recentLinks = links.slice(0, 5);
+
+  return (
+    <div className="space-y-8 max-w-3xl mx-auto">
+      {/* Welcome header */}
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">
+          {user?.first_name ? `Welcome back, ${user.first_name}` : "Dashboard"}
+        </h1>
+        <p className="text-muted-foreground mt-1">Here's an overview of your links.</p>
+      </div>
+
+      {/* Stats row */}
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+        <StatCard
+          label="Total links"
+          value={formatNumber(pagination?.count ?? links.length)}
+          icon={Link2}
+          isLoading={isLoading}
+        />
+        <StatCard
+          label="Active links"
+          value={formatNumber(activeLinks)}
+          icon={TrendingUp}
+          isLoading={isLoading}
+        />
+        <StatCard
+          label="Total clicks"
+          value={formatNumber(totalClicks)}
+          icon={MousePointerClick}
+          isLoading={isLoading}
+        />
+      </div>
+
+      {/* Create form */}
+      <CreateLinkForm />
+
+      {/* Recent links */}
+      <section aria-label="Recent links">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold">Recent Links</h2>
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/links">
+              View all
+              <ArrowRight className="ml-1 h-4 w-4" />
+            </Link>
+          </Button>
+        </div>
+
+        {isLoading && recentLinks.length === 0 && (
+          <div className="space-y-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-24 w-full" />
+            ))}
+          </div>
+        )}
+
+        {!isLoading && recentLinks.length === 0 && (
+          <p className="text-center text-muted-foreground py-8">
+            No links yet — create one above!
+          </p>
+        )}
+
+        <div className="space-y-3">
+          {recentLinks.map((link) => (
+            <LinkCard key={link.id} link={link} />
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
