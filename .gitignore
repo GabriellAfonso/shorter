@@ -1,22 +1,46 @@
 Makefile
 
-# Django #
+# ─── Python / Django ───────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
 *.log
 *.pot
-*.pyc
-__pycache__
 db.sqlite3
-media
-django/static
-venv.txt
-project/local_settings.py
-certbot/usr
-certbot/etc
-certbot-challenge
-portfolio/static
-# portfolio/core/settings/prod.py
-# Backup files # 
-*.bak 
+media/
+staticfiles/
+local_settings.py
+
+# ─── Virtual environments ───────────────────────────────────────────────────
+venv/
+venv.bak/
+.venv/
+env/
+ENV/
+
+# ─── Environment files ──────────────────────────────────────────────────────
+.env
+.env.prod
+backend/.env
+frontend/.env.local
+
+# ─── Node / React ───────────────────────────────────────────────────────────
+node_modules/
+dist/
+dist-ssr/
+*.local
+.npm
+.eslintcache
+
+# ─── Celery ─────────────────────────────────────────────────────────────────
+celerybeat-schedule.*
+
+# ─── Backup files ───────────────────────────────────────────────────────────
+*.bak
 
 # If you are using PyCharm # 
 # User-specific stuff
@@ -155,3 +179,7 @@ ssl
 #nginx
 default.challenge.conf
 default.prod.conf
+
+CLAUDE.md
+.devcontainer
+_README.md
