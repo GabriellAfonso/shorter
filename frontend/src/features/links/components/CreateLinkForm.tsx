@@ -14,6 +14,7 @@ export function CreateLinkForm() {
   const [url, setUrl] = useState("");
   const [customSlug, setCustomSlug] = useState("");
   const [title, setTitle] = useState("");
+  const [expiresAt, setExpiresAt] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
@@ -27,6 +28,7 @@ export function CreateLinkForm() {
         original_url: url,
         slug: customSlug || undefined,
         title: title || undefined,
+        expires_at: expiresAt || undefined,
       });
       toast({
         title: t("createLink.linkCreated"),
@@ -35,6 +37,7 @@ export function CreateLinkForm() {
       setUrl("");
       setCustomSlug("");
       setTitle("");
+      setExpiresAt("");
     } catch (err: unknown) {
       const details = (err as { response?: { data?: { error?: { details?: Record<string, string[]> } } } })
         ?.response?.data?.error?.details;
@@ -101,6 +104,16 @@ export function CreateLinkForm() {
                   placeholder="My awesome link"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="expiresAt">{t("createLinkDialog.expiryLabel")}</Label>
+                <Input
+                  id="expiresAt"
+                  type="datetime-local"
+                  value={expiresAt}
+                  onChange={(e) => setExpiresAt(e.target.value)}
+                  min={new Date(Date.now() + 60_000).toISOString().slice(0, 16)}
                 />
               </div>
             </div>
