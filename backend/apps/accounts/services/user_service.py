@@ -53,4 +53,9 @@ def change_password(*, user, old_password: str, new_password: str) -> None:
         raise ValidationError({"old_password": "Current password is incorrect."})
     user.set_password(new_password)
     user.save(update_fields=["password", "updated_at"])
-    logger.info("Password changed for user %s", user.email)
+
+    from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
+    for token in OutstandingToken.objects.filter(user=user):
+        BlacklistedToken.objects.get_or_create(token=token)
+
+    logger.info("Password changed for user %s — all tokens invalidated", user.email)

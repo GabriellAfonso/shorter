@@ -12,14 +12,18 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from apps.accounts.api.serializers.auth_serializers import CustomTokenObtainPairSerializer, LogoutSerializer, RegisterSerializer
 from apps.accounts.api.serializers.users_serializers import UserProfileSerializer
 from apps.accounts.services.user_service import create_user
+from apps.links.throttles import AuthRateThrottle
 
 logger = logging.getLogger(__name__)
 
 
 class RegisterView(APIView):
     """Create a new user account and return JWT tokens."""
-
+    serializer_class = RegisterSerializer
     permission_classes = [AllowAny]
+
+    def get_throttles(self):
+        return [AuthRateThrottle()]
 
     @staticmethod
     def post(request: Request) -> Response:
@@ -71,6 +75,9 @@ class LogoutView(APIView):
 
 class LoginView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
+
+    def get_throttles(self):
+        return [AuthRateThrottle()]
 
 
 TokenRefreshView = TokenRefreshView
