@@ -24,8 +24,7 @@ class RegisterView(APIView):
     @staticmethod
     def post(request: Request) -> Response:
         serializer = RegisterSerializer(data=request.data)
-        if not serializer.is_valid():
-            serializer.is_valid(raise_exception=True)
+        serializer.is_valid(raise_exception=True)
         d = serializer.validated_data
 
         user = create_user(

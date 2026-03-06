@@ -13,8 +13,6 @@ def create_user(*, email: str, password: str, first_name: str = "", last_name: s
     Register a new user account.
     Raises ValidationError if the email is already taken.
     """
-    if user_exists(email):
-        raise ValidationError({"email": "A user with this email already exists."})
 
     user = User.objects.create_user(
         email=email,
