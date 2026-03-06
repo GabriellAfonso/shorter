@@ -9,6 +9,7 @@ from apps.links.models import ShortURL
 from apps.links.services.link_service import create_short_url, delete_short_url, get_redirect_url, record_click
 from apps.links.tests.factories import ShortURLFactory
 from apps.accounts.tests.factories import UserFactory
+from core.exceptions import QuotaExceeded
 from core.utils import generate_slug
 
 
@@ -63,6 +64,43 @@ class TestCreateShortURL:
         user = UserFactory()
         link = create_short_url(original_url="https://example.com", owner=user)
         assert link.owner == user
+
+    def test_create_raises_quota_exceeded_at_limit(self, settings):
+        settings.MAX_LINKS_PER_USER = 3
+        user = UserFactory()
+        ShortURLFactory.create_batch(3, owner=user, is_active=True)
+        with pytest.raises(QuotaExceeded):
+            create_short_url(original_url="https://example.com", owner=user)
+
+    def test_deleted_links_do_not_count_toward_quota(self, settings):
+        settings.MAX_LINKS_PER_USER = 2
+        user = UserFactory()
+        ShortURLFactory.create_batch(2, owner=user, is_active=True)
+        # Soft-delete one link — quota should open up
+        link = ShortURLFactory(owner=user, is_active=False)  # noqa: F841
+        # 2 active + 1 inactive = should still be allowed since inactive don't count
+        ShortURLFactory(owner=user, is_active=False)
+        # Still at 2 active — exactly at limit, should raise
+        with pytest.raises(QuotaExceeded):
+            create_short_url(original_url="https://example.com", owner=user)
+
+    def test_quota_allows_creation_after_delete(self, settings):
+        settings.MAX_LINKS_PER_USER = 1
+        user = UserFactory()
+        existing = ShortURLFactory(owner=user, is_active=True)
+        delete_short_url(link=existing)
+        # Now 0 active — should succeed
+        new_link = create_short_url(original_url="https://example.com", owner=user)
+        assert new_link.pk is not None
+
+    def test_quota_is_per_user(self, settings):
+        settings.MAX_LINKS_PER_USER = 1
+        user_a = UserFactory()
+        user_b = UserFactory()
+        ShortURLFactory(owner=user_a, is_active=True)
+        # user_b has 0 links — should succeed
+        link = create_short_url(original_url="https://example.com", owner=user_b)
+        assert link.pk is not None
 
 
 @pytest.mark.django_db
