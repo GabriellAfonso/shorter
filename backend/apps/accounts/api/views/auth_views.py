@@ -25,8 +25,7 @@ class RegisterView(APIView):
     def get_throttles(self):
         return [AuthRateThrottle()]
 
-    @staticmethod
-    def post(request: Request) -> Response:
+    def post(self, request: Request) -> Response:
         serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         d = serializer.validated_data
@@ -56,8 +55,7 @@ class LogoutView(APIView):
 
     permission_classes = [IsAuthenticated]
 
-    @staticmethod
-    def post(request: Request) -> Response:
+    def post(self, request: Request) -> Response:
         serializer = LogoutSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
