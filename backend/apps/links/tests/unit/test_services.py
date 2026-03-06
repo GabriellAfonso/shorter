@@ -74,15 +74,12 @@ class TestCreateShortURL:
         with pytest.raises(QuotaExceeded):
             create_short_url(original_url="https://example.com", owner=user)
 
-    def test_deleted_links_do_not_count_toward_quota(self, settings):
+    def test_inactive_links_excluded_from_quota_count(self, settings):
         settings.MAX_LINKS_PER_USER = 2
         user = UserFactory()
-        ShortURLFactory.create_batch(2, owner=user, is_active=True)
-        # Soft-delete one link — quota should open up
-        link = ShortURLFactory(owner=user, is_active=False)  # noqa: F841
-        # 2 active + 1 inactive = should still be allowed since inactive don't count
-        ShortURLFactory(owner=user, is_active=False)
-        # Still at 2 active — exactly at limit, should raise
+        ShortURLFactory.create_batch(2, owner=user, is_active=True)   # exactly at limit
+        ShortURLFactory.create_batch(2, owner=user, is_active=False)  # inactive — must not count
+        # 2 active links = at the limit; inactive links are irrelevant
         with pytest.raises(QuotaExceeded):
             create_short_url(original_url="https://example.com", owner=user)
 
