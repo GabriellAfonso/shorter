@@ -3,15 +3,17 @@ Tests for the accounts feature.
 Covers: register, login, logout, token refresh, protected-endpoint guard.
 """
 import pytest
+
+pytestmark = pytest.mark.integration
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.accounts.tests.factories import UserFactory
 
-REGISTER_URL = "/api/v1/accounts/register/"
-LOGIN_URL = "/api/v1/accounts/login/"
-LOGOUT_URL = "/api/v1/accounts/logout/"
-REFRESH_URL = "/api/v1/accounts/token/refresh/"
+REGISTER_URL = "/api/v1/auth/register/"
+LOGIN_URL = "/api/v1/auth/login/"
+LOGOUT_URL = "/api/v1/auth/logout/"
+REFRESH_URL = "/api/v1/auth/token/refresh/"
 ME_URL = "/api/v1/users/me/"
 
 

@@ -3,6 +3,8 @@ Tests for the users feature.
 Covers: profile retrieval, profile update, password change.
 """
 import pytest
+
+pytestmark = pytest.mark.integration
 from rest_framework import status
 
 
