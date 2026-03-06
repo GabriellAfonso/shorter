@@ -12,6 +12,9 @@ export default defineConfig({
   server: {
     port: 5173,
     host: true,
+    watch: {
+      usePolling: true,
+    },
     proxy: {
       // Proxy API calls to Django during development
       "/api": {
