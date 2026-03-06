@@ -1,4 +1,6 @@
+from django.conf import settings
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from apps.links.models.short_url import ShortURL
 
@@ -28,7 +30,7 @@ class ShortURLSerializer(serializers.ModelSerializer):
 
 class CreateShortURLSerializer(serializers.Serializer):
     original_url = serializers.URLField(
-        max_length=2048,
+        max_length=settings.MAX_TARGET_URL_LENGTH,
         help_text="Target URL (HTTP/HTTPS only). Private IP ranges are blocked.",
     )
     slug = serializers.CharField(
@@ -47,7 +49,7 @@ class CreateShortURLSerializer(serializers.Serializer):
 
     def validate_expires_at(self, value):
         if value and value <= timezone.now():
-            raise serializers.ValidationError("Expiry date must be in the future.")
+            raise serializers.ValidationError(_("Expiry date must be in the future."))
         return value
 
     def validate_slug(self, value: str) -> str | None:

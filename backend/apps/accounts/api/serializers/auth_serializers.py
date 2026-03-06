@@ -1,5 +1,6 @@
 from typing import Any, Dict
 from django.contrib.auth import get_user_model
+from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
@@ -16,7 +17,7 @@ class RegisterSerializer(serializers.Serializer):
     def validate_email(value: str) -> str:
         """Fixed the 'static' warning by adding the decorator."""
         if User.objects.filter(email__iexact=value).exists():
-            raise serializers.ValidationError("A user with this email already exists.")
+            raise serializers.ValidationError(_("A user with this email already exists."))
         return value.lower()
 
 

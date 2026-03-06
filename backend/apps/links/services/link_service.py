@@ -16,12 +16,14 @@ from django.conf import settings
 from django.core.cache import cache
 from django.db import transaction
 from django.db.models import F
+from django.utils.translation import gettext_lazy as _
 from rest_framework.exceptions import ValidationError
 
 from apps.links.models.link_click import LinkClick
 from apps.links.models.short_url import ShortURL
 from apps.links.selectors.link_selector import invalidate_analytics_cache, slug_exists
 from apps.links.validators import validate_custom_slug, validate_target_url
+from core.exceptions import QuotaExceeded
 from core.utils import generate_slug, hash_ip
 
 logger = logging.getLogger(__name__)
@@ -50,13 +52,21 @@ def create_short_url(
     If `custom_slug` is provided it is validated for uniqueness.
     Otherwise a random slug is generated (up to 5 retries on collision).
     """
+    # ── Quota: enforce per-user active link limit ────────────────────────────
+    max_links = getattr(settings, "MAX_LINKS_PER_USER", 30)
+    active_count = ShortURL.objects.filter(owner=owner, is_active=True).count()
+    if active_count >= max_links:
+        raise QuotaExceeded(
+            _("You have reached the limit of %(n)s active links. Delete some links to create new ones.") % {"n": max_links}
+        )
+
     # ── Security: validate target URL (SSRF / scheme / length) ─────────────
     validate_target_url(original_url)
 
     if custom_slug:
         validate_custom_slug(custom_slug)
         if slug_exists(custom_slug):
-            raise ValidationError({"slug": f"The slug '{custom_slug}' is already taken."})
+            raise ValidationError({"slug": _("The slug '%(slug)s' is already taken.") % {"slug": custom_slug}})
         slug = custom_slug
     else:
         slug = _generate_unique_slug()
@@ -147,7 +157,7 @@ def _generate_unique_slug(max_retries: int = 5) -> str:
         if not slug_exists(slug):
             return slug
         logger.debug("Slug collision on attempt %d: %s", attempt + 1, slug)
-    raise ValidationError({"slug": "Could not generate a unique slug. Please try again."})
+    raise ValidationError({"slug": _("Could not generate a unique slug. Please try again.")})
 
 
 def _compute_ttl(link: ShortURL) -> int:

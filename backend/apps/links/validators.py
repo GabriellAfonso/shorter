@@ -11,6 +11,7 @@ import logging
 import re
 from urllib.parse import urlparse
 
+from django.utils.translation import gettext_lazy as _
 from rest_framework.exceptions import ValidationError
 
 logger = logging.getLogger(__name__)
@@ -52,7 +53,11 @@ RESERVED_SLUGS = frozenset(
 )
 
 _SLUG_RE = re.compile(r"^[A-Za-z0-9_-]+$")
-_MAX_URL_LENGTH = 2048
+
+
+def _get_max_url_length() -> int:
+    from django.conf import settings
+    return getattr(settings, "MAX_TARGET_URL_LENGTH", 2048)
 
 
 # ─── URL validator ────────────────────────────────────────────────────────
@@ -69,25 +74,26 @@ def validate_target_url(url: str) -> str:
     4. Hostname not in blocked list
     5. If hostname looks like an IP, ensure it is not in a private range
     """
-    if len(url) > _MAX_URL_LENGTH:
-        raise ValidationError({"original_url": f"URL must be at most {_MAX_URL_LENGTH} characters."})
+    max_length = _get_max_url_length()
+    if len(url) > max_length:
+        raise ValidationError({"original_url": _("URL must be at most %(n)s characters.") % {"n": max_length}})
 
     try:
         parsed = urlparse(url)
     except Exception:
-        raise ValidationError({"original_url": "Invalid URL format."})
+        raise ValidationError({"original_url": _("Invalid URL format.")})
 
     if parsed.scheme not in ALLOWED_SCHEMES:
         raise ValidationError(
-            {"original_url": f"Only HTTP and HTTPS URLs are permitted (got: '{parsed.scheme}')."}
+            {"original_url": _("Only HTTP and HTTPS URLs are permitted (got: '%(scheme)s').") % {"scheme": parsed.scheme}}
         )
 
     hostname = (parsed.hostname or "").lower()
     if not hostname:
-        raise ValidationError({"original_url": "URL must contain a valid hostname."})
+        raise ValidationError({"original_url": _("URL must contain a valid hostname.")})
 
     if hostname in BLOCKED_HOSTNAMES:
-        raise ValidationError({"original_url": "This URL target is not permitted."})
+        raise ValidationError({"original_url": _("This URL target is not permitted.")})
 
     # Resolve hostname to check for private IPs (inline; no DNS lookup needed
     # for literal IP addresses, which is the critical SSRF vector).
@@ -104,7 +110,7 @@ def _assert_public_ip(ip: ipaddress.IPv4Address | ipaddress.IPv6Address) -> None
     for network in _PRIVATE_NETWORKS:
         if ip in network:
             raise ValidationError(
-                {"original_url": "URLs pointing to private or reserved IP ranges are not allowed."}
+                {"original_url": _("URLs pointing to private or reserved IP ranges are not allowed.")}
             )
 
 
@@ -118,14 +124,14 @@ def validate_custom_slug(slug: str) -> str:
     - Not a reserved system word
     """
     if not (2 <= len(slug) <= 50):
-        raise ValidationError({"slug": "Custom slug must be between 2 and 50 characters."})
+        raise ValidationError({"slug": _("Custom slug must be between 2 and 50 characters.")})
 
     if not _SLUG_RE.match(slug):
         raise ValidationError(
-            {"slug": "Slug may only contain letters, numbers, hyphens and underscores."}
+            {"slug": _("Slug may only contain letters, numbers, hyphens and underscores.")}
         )
 
     if slug.lower() in RESERVED_SLUGS:
-        raise ValidationError({"slug": f"The slug '{slug}' is reserved and cannot be used."})
+        raise ValidationError({"slug": _("The slug '%(slug)s' is reserved and cannot be used.") % {"slug": slug}})
 
     return slug

@@ -1,0 +1,92 @@
+# Portuguese (Brazil) translations for Shorter URL shortener.
+msgid ""
+msgstr ""
+"Project-Id-Version: Shorter 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-03-05 00:00+0000\n"
+"PO-Revision-Date: 2026-03-05 00:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: Portuguese (Brazil)\n"
+"Language: pt_BR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+msgid "English"
+msgstr "Inglês"
+
+msgid "Portuguese (Brazil)"
+msgstr "Português (Brasil)"
+
+# validators.py
+msgid "URL must be at most %(n)s characters."
+msgstr "A URL deve ter no máximo %(n)s caracteres."
+
+msgid "Invalid URL format."
+msgstr "Formato de URL inválido."
+
+msgid "Only HTTP and HTTPS URLs are permitted (got: '%(scheme)s')."
+msgstr "Apenas URLs HTTP e HTTPS são permitidas (recebido: '%(scheme)s')."
+
+msgid "URL must contain a valid hostname."
+msgstr "A URL deve conter um hostname válido."
+
+msgid "This URL target is not permitted."
+msgstr "Este destino de URL não é permitido."
+
+msgid "URLs pointing to private or reserved IP ranges are not allowed."
+msgstr "URLs apontando para faixas de IP privadas ou reservadas não são permitidas."
+
+msgid "Custom slug must be between 2 and 50 characters."
+msgstr "O slug personalizado deve ter entre 2 e 50 caracteres."
+
+msgid "Slug may only contain letters, numbers, hyphens and underscores."
+msgstr "O slug pode conter apenas letras, números, hífens e sublinhados."
+
+msgid "The slug '%(slug)s' is reserved and cannot be used."
+msgstr "O slug '%(slug)s' é reservado e não pode ser usado."
+
+# link_service.py
+msgid "The slug '%(slug)s' is already taken."
+msgstr "O slug '%(slug)s' já está em uso."
+
+msgid "Could not generate a unique slug. Please try again."
+msgstr "Não foi possível gerar um slug único. Tente novamente."
+
+msgid "You have reached the limit of %(n)s active links. Delete some links to create new ones."
+msgstr "Você atingiu o limite de %(n)s links ativos. Exclua alguns links para criar novos."
+
+# serializers.py
+msgid "Expiry date must be in the future."
+msgstr "A data de expiração deve ser no futuro."
+
+# auth_serializers.py
+msgid "A user with this email already exists."
+msgstr "Um usuário com este e-mail já existe."
+
+# users_serializers.py
+msgid "Passwords do not match."
+msgstr "As senhas não coincidem."
+
+# core/exceptions.py
+msgid "An unexpected error occurred."
+msgstr "Ocorreu um erro inesperado."
+
+msgid "Invalid input."
+msgstr "Entrada inválida."
+
+msgid "Resource not found."
+msgstr "Recurso não encontrado."
+
+msgid "A resource with this identifier already exists."
+msgstr "Um recurso com este identificador já existe."
+
+msgid "Service temporarily unavailable."
+msgstr "Serviço temporariamente indisponível."
+
+msgid "Rate limit exceeded. Please slow down."
+msgstr "Limite de requisições excedido. Por favor, aguarde."
+
+msgid "You have reached the maximum number of active links. Delete some links to create new ones."
+msgstr "Você atingiu o número máximo de links ativos. Exclua alguns links para criar novos."

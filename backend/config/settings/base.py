@@ -48,6 +48,7 @@ MIDDLEWARE = [
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -173,7 +174,14 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # ─── Internationalisation ──────────────────────────────────────────────────
-LANGUAGE_CODE = "en-us"
+from django.utils.translation import gettext_lazy as _  # noqa: E402
+
+LANGUAGE_CODE = "pt-br"
+LANGUAGES = [
+    ("en", _("English")),
+    ("pt-br", _("Portuguese (Brazil)")),
+]
+LOCALE_PATHS = [BASE_DIR / "locale"]
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
@@ -238,3 +246,5 @@ SHORT_URL_LENGTH = int(os.environ.get("SHORT_URL_LENGTH", "8"))
 SHORT_URL_BASE_DOMAIN = os.environ.get("SHORT_URL_BASE_DOMAIN", "http://localhost:8000")
 REDIRECT_CACHE_TTL = 60 * 60 * 24  # 24 hours in seconds
 REDIRECT_RATE_LIMIT = 100  # requests per minute per IP
+MAX_LINKS_PER_USER = int(os.environ.get("MAX_LINKS_PER_USER", "30"))
+MAX_TARGET_URL_LENGTH = 2048
