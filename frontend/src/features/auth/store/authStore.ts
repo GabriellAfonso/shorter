@@ -29,6 +29,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       const data = await loginApi(payload);
       localStorage.setItem("access_token", data.access);
       localStorage.setItem("refresh_token", data.refresh);
+      sessionStorage.setItem("just_logged_in", "1");
       set({ user: data.user, isAuthenticated: true });
     } finally {
       set({ isLoading: false });
@@ -41,6 +42,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       const data = await registerApi(payload);
       localStorage.setItem("access_token", data.tokens.access);
       localStorage.setItem("refresh_token", data.tokens.refresh);
+      sessionStorage.setItem("just_logged_in", "1");
       set({ user: data.user, isAuthenticated: true });
     } finally {
       set({ isLoading: false });

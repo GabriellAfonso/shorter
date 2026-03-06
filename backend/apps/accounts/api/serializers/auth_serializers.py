@@ -32,7 +32,9 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         data["user"] = {
             "id": self.user.pk,
             "email": self.user.email,
-            "full_name": self.user.get_full_name(),  # Ensure this method exists on your User model
+            "first_name": self.user.first_name,
+            "last_name": self.user.last_name,
+            "full_name": self.user.get_full_name(),
         }
         return data
 

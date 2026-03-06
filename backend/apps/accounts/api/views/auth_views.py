@@ -9,7 +9,7 @@ from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from apps.accounts.api.serializers.auth_serializers import LogoutSerializer, RegisterSerializer
+from apps.accounts.api.serializers.auth_serializers import CustomTokenObtainPairSerializer, LogoutSerializer, RegisterSerializer
 from apps.accounts.api.serializers.users_serializers import UserProfileSerializer
 from apps.accounts.services.user_service import create_user
 
@@ -70,6 +70,8 @@ class LogoutView(APIView):
         return Response({"detail": "Successfully logged out."}, status=status.HTTP_200_OK)
 
 
-# Re-export SimpleJWT views under our URL namespace.
-LoginView = TokenObtainPairView
+class LoginView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
+
+
 TokenRefreshView = TokenRefreshView

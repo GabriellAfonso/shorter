@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Link2, MousePointerClick, TrendingUp } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -45,7 +45,11 @@ export function DashboardPage() {
   const { t } = useTranslation();
   const { user } = useAuthStore();
   const { links, pagination, isLoading, fetchLinks } = useLinksStore();
-
+  const [justLoggedIn] = useState(() => {
+    const flag = sessionStorage.getItem("just_logged_in") === "1";
+    sessionStorage.removeItem("just_logged_in");
+    return flag;
+  });
   useEffect(() => {
     fetchLinks(1);
   }, [fetchLinks]);
@@ -59,7 +63,7 @@ export function DashboardPage() {
       {/* Welcome header */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight">
-          {user?.first_name
+          {justLoggedIn && user?.first_name
             ? t("dashboard.welcomeBack", { name: user.first_name })
             : t("dashboard.title")}
         </h1>
