@@ -2,6 +2,8 @@
 Tests for URL and slug validators (SSRF, scheme, slug rules).
 """
 import pytest
+
+pytestmark = pytest.mark.unit
 from rest_framework.exceptions import ValidationError
 
 from apps.links.validators import validate_custom_slug, validate_target_url

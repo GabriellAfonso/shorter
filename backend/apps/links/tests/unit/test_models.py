@@ -3,6 +3,8 @@ Tests for links domain models.
 Covers: ShortURL properties, LinkClick creation, expiry logic.
 """
 import pytest
+
+pytestmark = pytest.mark.unit
 from django.utils import timezone
 
 from apps.links.tests.factories import ExpiredShortURLFactory, LinkClickFactory, ShortURLFactory

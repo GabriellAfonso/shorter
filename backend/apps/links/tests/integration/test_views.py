@@ -3,6 +3,8 @@ Tests for links API views.
 Covers: CRUD, analytics, redirect endpoint, ownership enforcement.
 """
 import pytest
+
+pytestmark = pytest.mark.integration
 from rest_framework import status
 
 from apps.links.tests.factories import ExpiredShortURLFactory, ShortURLFactory
@@ -92,17 +94,17 @@ class TestLinkDetail:
 class TestRedirectEndpoint:
     def test_valid_slug_redirects(self, client):
         link = ShortURLFactory(original_url="https://target.example.com")
-        response = client.get(f"/{link.slug}/", follow=False)
+        response = client.get(f"/s/{link.slug}/", follow=False)
         assert response.status_code == 302
         assert response["Location"] == "https://target.example.com"
 
     def test_invalid_slug_returns_404(self, client):
-        response = client.get("/nonexistentslug/", follow=False)
+        response = client.get("/s/nonexistentslug/", follow=False)
         assert response.status_code == 404
 
     def test_expired_link_returns_404(self, client):
         link = ExpiredShortURLFactory()
-        response = client.get(f"/{link.slug}/", follow=False)
+        response = client.get(f"/s/{link.slug}/", follow=False)
         assert response.status_code == 404
 
 

@@ -3,6 +3,8 @@ Tests for links business logic (services).
 Covers: slug generation, URL creation, collision handling, delete, redirect cache.
 """
 import pytest
+
+pytestmark = pytest.mark.unit
 from django.core.cache import cache
 
 from apps.links.models import ShortURL
@@ -122,19 +124,20 @@ class TestDeleteShortURL:
 class TestGetRedirectURL:
     def test_returns_url_for_valid_slug(self):
         link = ShortURLFactory(original_url="https://target.com")
-        url = get_redirect_url(link.slug)
+        url, link_id = get_redirect_url(link.slug)
         assert url == "https://target.com"
+        assert link_id == str(link.id)
 
     def test_returns_none_for_invalid_slug(self):
-        url = get_redirect_url("nonexistent")
-        assert url is None
+        result = get_redirect_url("nonexistent")
+        assert result is None
 
     def test_caches_result(self):
         link = ShortURLFactory(original_url="https://target.com")
         get_redirect_url(link.slug)  # populate cache
         # Delete from DB — should still return from cache
         ShortURL.objects.filter(pk=link.pk).delete()
-        url = get_redirect_url(link.slug)
+        url, link_id = get_redirect_url(link.slug)
         assert url == "https://target.com"
 
 
