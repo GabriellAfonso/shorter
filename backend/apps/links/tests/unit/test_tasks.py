@@ -64,3 +64,40 @@ class TestDeactivateExpiredLinks:
         ShortURLFactory.create_batch(2)
         result = deactivate_expired_links()
         assert result == 0
+
+
+@pytest.mark.django_db
+class TestDeactivateExpiredLinksPeriodicSchedule:
+    """The migration must register the task in django-celery-beat correctly."""
+
+    def test_periodic_task_exists(self):
+        from django_celery_beat.models import PeriodicTask
+        assert PeriodicTask.objects.filter(name="Deactivate expired links").exists()
+
+    def test_periodic_task_points_to_correct_task(self):
+        from django_celery_beat.models import PeriodicTask
+        pt = PeriodicTask.objects.get(name="Deactivate expired links")
+        assert pt.task == "apps.links.tasks.deactivate_expired_links"
+
+    def test_periodic_task_interval_is_10_minutes(self):
+        from django_celery_beat.models import PeriodicTask
+        pt = PeriodicTask.objects.get(name="Deactivate expired links")
+        assert pt.interval.every == 10
+        assert pt.interval.period == "minutes"
+
+    def test_running_migration_twice_does_not_duplicate(self):
+        import importlib
+        from django.apps import apps as django_apps
+        from django_celery_beat.models import IntervalSchedule, PeriodicTask
+
+        migration = importlib.import_module(
+            "apps.links.migrations.0002_periodic_task_deactivate_expired_links"
+        )
+        create_periodic_task = migration.create_periodic_task
+
+        # Simulate running the migration a second time; get_or_create must prevent duplicates
+        create_periodic_task(django_apps, None)
+        create_periodic_task(django_apps, None)
+
+        assert PeriodicTask.objects.filter(name="Deactivate expired links").count() == 1
+        assert IntervalSchedule.objects.filter(every=10, period="minutes").count() == 1
