@@ -44,7 +44,7 @@ function StatCard({
 export function DashboardPage() {
   const { t } = useTranslation();
   const { user } = useAuthStore();
-  const { links, pagination, isLoading, fetchLinks } = useLinksStore();
+  const { links, pagination, stats, isLoading, fetchLinks } = useLinksStore();
   const [justLoggedIn] = useState(() => {
     const flag = sessionStorage.getItem("just_logged_in") === "1";
     sessionStorage.removeItem("just_logged_in");
@@ -54,8 +54,6 @@ export function DashboardPage() {
     fetchLinks(1);
   }, [fetchLinks]);
 
-  const totalClicks = links.reduce((sum, l) => sum + l.click_count, 0);
-  const activeLinks = links.filter((l) => l.is_active && !l.is_expired).length;
   const recentLinks = links.slice(0, 5);
 
   return (
@@ -80,13 +78,13 @@ export function DashboardPage() {
         />
         <StatCard
           label={t("dashboard.activeLinks")}
-          value={formatNumber(activeLinks)}
+          value={formatNumber(stats?.active_count ?? 0)}
           icon={TrendingUp}
           isLoading={isLoading}
         />
         <StatCard
           label={t("dashboard.totalClicks")}
-          value={formatNumber(totalClicks)}
+          value={formatNumber(stats?.total_clicks ?? 0)}
           icon={MousePointerClick}
           isLoading={isLoading}
         />

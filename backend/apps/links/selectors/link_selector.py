@@ -1,7 +1,7 @@
 """Read-only database queries for the links domain."""
 import logging
 from django.core.cache import cache
-from django.db.models import Count, QuerySet
+from django.db.models import Count, Q, QuerySet, Sum
 from django.db.models.functions import TruncDate
 from django.utils import timezone
 from core.exceptions import NotFound
@@ -108,6 +108,23 @@ def invalidate_analytics_cache(link_id: str) -> None:
     for days in (7, 30, 90, 365):
         key = _ANALYTICS_CACHE_KEY.format(link_id=link_id, days=days)
         cache.delete(key)
+
+
+def get_user_link_stats(user) -> dict:
+    """
+    Return aggregate stats for all of a user's links (active and inactive).
+
+    - total_clicks: sum of click_count across every link the user ever created.
+    - active_count: links that are active and not expired right now.
+    """
+    qs = ShortURL.objects.filter(owner=user)
+    total_clicks = qs.aggregate(total=Sum("click_count"))["total"] or 0
+    active_count = qs.filter(
+        is_active=True,
+    ).filter(
+        Q(expires_at__isnull=True) | Q(expires_at__gte=timezone.now())
+    ).count()
+    return {"total_clicks": total_clicks, "active_count": active_count}
 
 
 def slug_exists(slug: str) -> bool:

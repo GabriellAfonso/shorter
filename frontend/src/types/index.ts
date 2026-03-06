@@ -81,6 +81,11 @@ export interface LinkAnalytics {
 
 // ─── API responses ─────────────────────────────────────────────────────────
 
+export interface LinkStats {
+  total_clicks: number;
+  active_count: number;
+}
+
 export interface PaginatedResponse<T> {
   pagination: {
     count: number;

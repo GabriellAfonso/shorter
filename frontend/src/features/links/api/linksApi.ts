@@ -1,7 +1,11 @@
 import apiClient from "@/api/client";
-import type { CreateLinkPayload, LinkAnalytics, PaginatedResponse, ShortURL } from "@/types";
+import type { CreateLinkPayload, LinkAnalytics, LinkStats, PaginatedResponse, ShortURL } from "@/types";
 
-export async function getLinksApi(page = 1, pageSize = 20): Promise<PaginatedResponse<ShortURL>> {
+export interface LinksListResponse extends PaginatedResponse<ShortURL> {
+  stats: LinkStats;
+}
+
+export async function getLinksApi(page = 1, pageSize = 20): Promise<LinksListResponse> {
   const { data } = await apiClient.get("/links/", { params: { page, page_size: pageSize } });
   return data;
 }

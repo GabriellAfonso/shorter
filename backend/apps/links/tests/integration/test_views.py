@@ -56,6 +56,17 @@ class TestLinkListCreate:
         response = auth_client.post(LINKS_URL, payload, format="json")
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
+    def test_list_includes_stats(self, auth_client):
+        ShortURLFactory.create_batch(2, owner=auth_client._user, click_count=5)
+        ShortURLFactory(owner=auth_client._user, click_count=3, is_active=False)
+
+        response = auth_client.get(LINKS_URL)
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert "stats" in data
+        assert data["stats"]["total_clicks"] == 13  # 5 + 5 + 3 (includes inactive)
+        assert data["stats"]["active_count"] == 2
+
     def test_unauthenticated_returns_401(self, api_client):
         response = api_client.get(LINKS_URL)
         assert response.status_code == status.HTTP_401_UNAUTHORIZED

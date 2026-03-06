@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.links.api.serializers import AnalyticsSerializer, CreateShortURLSerializer, ShortURLSerializer
-from apps.links.selectors.link_selector import get_cached_link_analytics, get_link_by_id, get_user_links
+from apps.links.selectors.link_selector import get_cached_link_analytics, get_link_by_id, get_user_link_stats, get_user_links
 from apps.links.services.link_service import create_short_url, delete_short_url
 from apps.links.throttles import LinkAnalyticsThrottle, LinkCreateThrottle
 from core.pagination import StandardResultsPagination
@@ -40,7 +40,9 @@ class LinkListCreateView(APIView):
         qs = get_user_links(request.user, is_active=is_active)
         paginator = StandardResultsPagination()
         page = paginator.paginate_queryset(qs, request)
-        return paginator.get_paginated_response(ShortURLSerializer(page, many=True).data)
+        response = paginator.get_paginated_response(ShortURLSerializer(page, many=True).data)
+        response.data["stats"] = get_user_link_stats(request.user)
+        return response
 
     def post(self, request: Request) -> Response:
         serializer = CreateShortURLSerializer(data=request.data)

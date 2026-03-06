@@ -1,10 +1,11 @@
 import { create } from "zustand";
-import type { ShortURL, CreateLinkPayload, PaginatedResponse } from "@/types";
+import type { ShortURL, CreateLinkPayload, LinkStats, PaginatedResponse } from "@/types";
 import { getLinksApi, createLinkApi, deleteLinkApi } from "../api/linksApi";
 
 interface LinksState {
   links: ShortURL[];
   pagination: PaginatedResponse<ShortURL>["pagination"] | null;
+  stats: LinkStats | null;
   isLoading: boolean;
   fetchLinks: (page?: number) => Promise<void>;
   createLink: (payload: CreateLinkPayload) => Promise<ShortURL>;
@@ -14,13 +15,14 @@ interface LinksState {
 export const useLinksStore = create<LinksState>((set) => ({
   links: [],
   pagination: null,
+  stats: null,
   isLoading: false,
 
   fetchLinks: async (page = 1) => {
     set({ isLoading: true });
     try {
       const data = await getLinksApi(page);
-      set({ links: data.results, pagination: data.pagination });
+      set({ links: data.results, pagination: data.pagination, stats: data.stats });
     } finally {
       set({ isLoading: false });
     }
