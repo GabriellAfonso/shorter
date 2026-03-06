@@ -33,6 +33,7 @@ SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "DENY"
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
 
 # ─── CORS ─────────────────────────────────────────────────────────────────
 CORS_ALLOWED_ORIGINS = [o.strip() for o in os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",") if o.strip()]

@@ -1,12 +1,14 @@
 """Root URL configuration."""
 from django.contrib import admin
+from django.http import HttpResponse
 from django.urls import path, include
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 from core.views import HealthCheckView
 from apps.links.redirect_views import RedirectView
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
+    path("core/", admin.site.urls),
+    path("robots.txt", lambda _: HttpResponse("User-agent: *\nDisallow: /s/\nDisallow: /api/\nDisallow: /core/\n", content_type="text/plain")),
 
     # ─── Health check (no accounts required) ───────────────────────────────────
     path("api/v1/health/", HealthCheckView.as_view(), name="health-check"),
