@@ -31,7 +31,6 @@ THIRD_PARTY_APPS = [
     "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
     "django_celery_beat",
-    "django_celery_results",
     "drf_spectacular",
 ]
 
@@ -108,11 +107,9 @@ CACHES = {
 
 # ─── Celery ────────────────────────────────────────────────────────────────
 CELERY_BROKER_URL = REDIS_URL
-CELERY_RESULT_BACKEND = "django-db"
-CELERY_CACHE_BACKEND = "default"
+CELERY_RESULT_BACKEND = None
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
-CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = "UTC"
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 CELERY_TASK_TRACK_STARTED = True
