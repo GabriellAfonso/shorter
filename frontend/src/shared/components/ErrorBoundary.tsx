@@ -1,4 +1,4 @@
-import { Component, type ErrorInfo, type ReactNode } from "react";
+import { Component, type ErrorInfo, type ReactNode, useState, useEffect } from "react";
 import { Button } from "@/shared/components/ui/button";
 
 interface Props {
@@ -36,22 +36,43 @@ export class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       if (this.props.fallback) return this.props.fallback;
-
-      return (
-        <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 text-center">
-          <div className="space-y-2">
-            <h2 className="text-2xl font-bold">Something went wrong</h2>
-            <p className="text-muted-foreground text-sm max-w-md">
-              {this.state.error?.message ?? "An unexpected error occurred."}
-            </p>
-          </div>
-          <Button onClick={this.handleReset} variant="outline">
-            Try again
-          </Button>
-        </div>
-      );
+      return <ErrorFallback error={this.state.error} onReset={this.handleReset} />;
     }
-
     return this.props.children;
   }
+}
+
+// Functional wrapper so hooks (useTranslation) can be used
+function ErrorFallback({ error, onReset }: { error: Error | null; onReset: () => void }) {
+  const [labels, setLabels] = useState({
+    title: "Something went wrong",
+    unexpected: "An unexpected error occurred.",
+    tryAgain: "Try again",
+  });
+
+  useEffect(() => {
+    // Dynamically resolve translations after i18n initialises
+    import("../../i18n").then(({ default: i18n }) => {
+      const t = (k: string) => i18n.t(k);
+      setLabels({
+        title: t("error.title"),
+        unexpected: t("error.unexpected"),
+        tryAgain: t("error.tryAgain"),
+      });
+    });
+  }, []);
+
+  return (
+    <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 text-center">
+      <div className="space-y-2">
+        <h2 className="text-2xl font-bold">{labels.title}</h2>
+        <p className="text-muted-foreground text-sm max-w-md">
+          {error?.message ?? labels.unexpected}
+        </p>
+      </div>
+      <Button onClick={onReset} variant="outline">
+        {labels.tryAgain}
+      </Button>
+    </div>
+  );
 }

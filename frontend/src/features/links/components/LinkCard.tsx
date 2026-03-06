@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Copy, Trash2, BarChart2, ExternalLink, Check } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
@@ -14,6 +15,7 @@ interface LinkCardProps {
 }
 
 export function LinkCard({ link }: LinkCardProps) {
+  const { t } = useTranslation();
   const { deleteLink } = useLinksStore();
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
@@ -23,17 +25,17 @@ export function LinkCard({ link }: LinkCardProps) {
     await navigator.clipboard.writeText(link.short_url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-    toast({ title: "Copied!", description: link.short_url });
+    toast({ title: t("linkCard.copied"), description: link.short_url });
   };
 
   const handleDelete = async () => {
-    if (!confirm(`Delete /${link.slug}?`)) return;
+    if (!confirm(t("linkCard.confirmDelete", { slug: link.slug }))) return;
     setDeleting(true);
     try {
       await deleteLink(link.id);
-      toast({ title: "Link deleted", description: `/${link.slug} was removed.` });
+      toast({ title: t("linkCard.linkDeleted"), description: t("linkCard.linkDeletedDesc", { slug: link.slug }) });
     } catch {
-      toast({ title: "Error", description: "Failed to delete link.", variant: "destructive" });
+      toast({ title: t("linkCard.error"), description: t("linkCard.deleteError"), variant: "destructive" });
     } finally {
       setDeleting(false);
     }
@@ -57,10 +59,10 @@ export function LinkCard({ link }: LinkCardProps) {
                 {link.short_url}
               </a>
               {link.is_expired && (
-                <Badge variant="destructive" className="text-xs">Expired</Badge>
+                <Badge variant="destructive" className="text-xs">{t("badge.expired")}</Badge>
               )}
               {!link.is_active && (
-                <Badge variant="secondary" className="text-xs">Inactive</Badge>
+                <Badge variant="secondary" className="text-xs">{t("badge.inactive")}</Badge>
               )}
             </div>
 
@@ -69,9 +71,9 @@ export function LinkCard({ link }: LinkCardProps) {
             </p>
 
             <div className="flex items-center gap-4 text-xs text-muted-foreground pt-1">
-              <span>{formatNumber(link.click_count)} clicks</span>
-              <span>Created {formatDate(link.created_at)}</span>
-              {link.expires_at && <span>Expires {formatDate(link.expires_at)}</span>}
+              <span>{t("linkCard.clicks", { n: formatNumber(link.click_count) })}</span>
+              <span>{t("linkCard.createdAt", { date: formatDate(link.created_at) })}</span>
+              {link.expires_at && <span>{t("linkCard.expiresAt", { date: formatDate(link.expires_at) })}</span>}
             </div>
           </div>
 
@@ -81,8 +83,8 @@ export function LinkCard({ link }: LinkCardProps) {
               variant="ghost"
               size="icon"
               onClick={handleCopy}
-              title="Copy short URL"
-              aria-label="Copy short URL"
+              title={t("linkCard.copyShortUrl")}
+              aria-label={t("linkCard.copyShortUrl")}
             >
               {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
             </Button>
@@ -90,8 +92,8 @@ export function LinkCard({ link }: LinkCardProps) {
               variant="ghost"
               size="icon"
               onClick={() => navigate(`/links/${link.id}/analytics`)}
-              title="View analytics"
-              aria-label="View analytics"
+              title={t("linkCard.viewAnalytics")}
+              aria-label={t("linkCard.viewAnalytics")}
             >
               <BarChart2 className="h-4 w-4" />
             </Button>
@@ -99,8 +101,8 @@ export function LinkCard({ link }: LinkCardProps) {
               variant="ghost"
               size="icon"
               asChild
-              title="Open original URL"
-              aria-label="Open original URL"
+              title={t("linkCard.openOriginalUrl")}
+              aria-label={t("linkCard.openOriginalUrl")}
             >
               <a href={link.original_url} target="_blank" rel="noopener noreferrer">
                 <ExternalLink className="h-4 w-4" />
@@ -111,8 +113,8 @@ export function LinkCard({ link }: LinkCardProps) {
               size="icon"
               onClick={handleDelete}
               disabled={deleting}
-              title="Delete link"
-              aria-label="Delete link"
+              title={t("linkCard.deleteLink")}
+              aria-label={t("linkCard.deleteLink")}
               className="text-destructive hover:text-destructive"
             >
               <Trash2 className="h-4 w-4" />

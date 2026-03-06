@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { DailyClicksChart, DeviceChart } from "../components/ClickChart";
@@ -9,6 +10,7 @@ import type { LinkAnalytics } from "@/types";
 import { formatNumber } from "@/shared/lib/utils";
 
 export function AnalyticsPage() {
+  const { t } = useTranslation();
   const { linkId } = useParams<{ linkId: string }>();
   const [analytics, setAnalytics] = useState<LinkAnalytics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -28,12 +30,12 @@ export function AnalyticsPage() {
       <Button variant="ghost" size="sm" asChild>
         <Link to="/dashboard">
           <ArrowLeft className="mr-1 h-4 w-4" />
-          Back to dashboard
+          {t("analytics.backToDashboard")}
         </Link>
       </Button>
 
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Link Analytics</h1>
+        <h1 className="text-2xl font-bold">{t("analytics.title")}</h1>
         <div className="flex gap-2">
           {[7, 30, 90].map((d) => (
             <Button key={d} size="sm" variant={days === d ? "default" : "outline"} onClick={() => setDays(d)}>
@@ -53,20 +55,20 @@ export function AnalyticsPage() {
         <>
           {/* Summary cards */}
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-            <StatCard label="Total Clicks" value={formatNumber(analytics.total_clicks)} />
-            <StatCard label={`Clicks (${days}d)`} value={formatNumber(analytics.clicks_in_period)} />
+            <StatCard label={t("analytics.totalClicks")} value={formatNumber(analytics.total_clicks)} />
+            <StatCard label={t("analytics.clicksInPeriod", { days })} value={formatNumber(analytics.clicks_in_period)} />
           </div>
 
           {/* Daily clicks chart */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Daily Clicks</CardTitle>
+              <CardTitle className="text-base">{t("analytics.dailyClicks")}</CardTitle>
             </CardHeader>
             <CardContent>
               {analytics.daily_clicks.length > 0 ? (
                 <DailyClicksChart data={analytics.daily_clicks} />
               ) : (
-                <p className="text-sm text-muted-foreground text-center py-8">No click data for this period.</p>
+                <p className="text-sm text-muted-foreground text-center py-8">{t("analytics.noClickData")}</p>
               )}
             </CardContent>
           </Card>
@@ -75,7 +77,7 @@ export function AnalyticsPage() {
             {/* Device breakdown */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">By Device</CardTitle>
+                <CardTitle className="text-base">{t("analytics.byDevice")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <DeviceChart data={analytics.by_device} />
@@ -85,17 +87,17 @@ export function AnalyticsPage() {
             {/* Top referrers */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Top Referrers</CardTitle>
+                <CardTitle className="text-base">{t("analytics.topReferrers")}</CardTitle>
               </CardHeader>
               <CardContent>
                 {analytics.top_referrers.length === 0 ? (
-                  <p className="text-sm text-muted-foreground py-8 text-center">No referrer data.</p>
+                  <p className="text-sm text-muted-foreground py-8 text-center">{t("analytics.noReferrerData")}</p>
                 ) : (
                   <ul className="space-y-2">
                     {analytics.top_referrers.map((r) => (
                       <li key={r.referrer} className="flex items-center justify-between text-sm">
                         <span className="truncate text-muted-foreground max-w-[160px]" title={r.referrer}>
-                          {r.referrer || "Direct"}
+                          {r.referrer || t("analytics.direct")}
                         </span>
                         <span className="font-medium">{formatNumber(r.count)}</span>
                       </li>

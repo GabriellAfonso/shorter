@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Plus, Link2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
@@ -8,6 +9,7 @@ import { toast } from "@/shared/hooks/useToast";
 import { useLinksStore } from "../store/linksStore";
 
 export function CreateLinkForm() {
+  const { t } = useTranslation();
   const { createLink } = useLinksStore();
   const [url, setUrl] = useState("");
   const [customSlug, setCustomSlug] = useState("");
@@ -27,8 +29,8 @@ export function CreateLinkForm() {
         title: title || undefined,
       });
       toast({
-        title: "Link created!",
-        description: `Your short URL: ${link.short_url}`,
+        title: t("createLink.linkCreated"),
+        description: t("createLink.linkCreatedDesc", { url: link.short_url }),
       });
       setUrl("");
       setCustomSlug("");
@@ -38,8 +40,8 @@ export function CreateLinkForm() {
         ?.response?.data?.error?.details;
       const msg = details
         ? Object.values(details).flat().join(" ")
-        : "Failed to create link. Please try again.";
-      toast({ title: "Error", description: msg, variant: "destructive" });
+        : t("createLink.createError");
+      toast({ title: t("createLink.error"), description: msg, variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -50,7 +52,7 @@ export function CreateLinkForm() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <Link2 className="h-5 w-5" />
-          Shorten a URL
+          {t("createLink.shortenUrl")}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -58,16 +60,16 @@ export function CreateLinkForm() {
           <div className="flex gap-2">
             <Input
               type="url"
-              placeholder="https://your-long-url.com/path/to/page"
+              placeholder={t("createLink.urlPlaceholder")}
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               required
               className="flex-1"
-              aria-label="URL to shorten"
+              aria-label={t("createLink.urlAriaLabel")}
             />
             <Button type="submit" disabled={isLoading}>
               <Plus className="mr-1 h-4 w-4" />
-              {isLoading ? "Creating…" : "Shorten"}
+              {isLoading ? t("createLink.creating") : t("createLink.shorten")}
             </Button>
           </div>
 
@@ -76,24 +78,24 @@ export function CreateLinkForm() {
             className="text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
             onClick={() => setShowAdvanced((v) => !v)}
           >
-            {showAdvanced ? "Hide" : "Show"} advanced options
+            {showAdvanced ? t("createLink.hideAdvanced") : t("createLink.showAdvanced")}
           </button>
 
           {showAdvanced && (
             <div className="grid gap-4 sm:grid-cols-2 pt-2 border-t">
               <div className="space-y-2">
-                <Label htmlFor="customSlug">Custom slug (optional)</Label>
+                <Label htmlFor="customSlug">{t("createLink.customSlug")}</Label>
                 <Input
                   id="customSlug"
                   placeholder="my-link"
                   value={customSlug}
                   onChange={(e) => setCustomSlug(e.target.value)}
                   pattern="[A-Za-z0-9_-]+"
-                  title="Letters, numbers, hyphens and underscores only"
+                  title={t("createLink.slugPattern")}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="title">Title (optional)</Label>
+                <Label htmlFor="title">{t("createLink.title")}</Label>
                 <Input
                   id="title"
                   placeholder="My awesome link"

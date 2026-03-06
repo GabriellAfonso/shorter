@@ -4,6 +4,7 @@
  */
 import { useState } from "react";
 import { Plus } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -47,6 +48,7 @@ export function CreateLinkDialog({
   onOpenChange,
   showTrigger = true,
 }: CreateLinkDialogProps) {
+  const { t } = useTranslation();
   const { createLink } = useLinksStore();
   const [form, setForm] = useState<FormState>(DEFAULT_FORM);
   const [isLoading, setIsLoading] = useState(false);
@@ -69,7 +71,7 @@ export function CreateLinkDialog({
         expires_at: form.expires_at || null,
       });
 
-      toast({ title: "Link created!", description: `Short URL: ${link.short_url}` });
+      toast({ title: t("createLinkDialog.linkCreated"), description: t("createLinkDialog.linkCreatedDesc", { url: link.short_url }) });
       setForm(DEFAULT_FORM);
       setShowAdvanced(false);
       onOpenChange?.(false);
@@ -81,8 +83,8 @@ export function CreateLinkDialog({
         ? Object.entries(details)
             .map(([field, errs]) => `${field}: ${errs.join(" ")}`)
             .join("; ")
-        : "Failed to create link.";
-      toast({ title: "Error", description: msg, variant: "destructive" });
+        : t("createLinkDialog.createError");
+      toast({ title: t("createLinkDialog.error"), description: msg, variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -91,15 +93,15 @@ export function CreateLinkDialog({
   const content = (
     <DialogContent className="sm:max-w-[520px]">
       <DialogHeader>
-        <DialogTitle>Create Short URL</DialogTitle>
-        <DialogDescription>Paste a long URL and get a short, shareable link.</DialogDescription>
+        <DialogTitle>{t("createLinkDialog.title")}</DialogTitle>
+        <DialogDescription>{t("createLinkDialog.description")}</DialogDescription>
       </DialogHeader>
 
       <form id="create-link-form" onSubmit={handleSubmit} className="space-y-4 py-2">
         {/* Required field */}
         <div className="space-y-2">
           <Label htmlFor="original_url">
-            Destination URL <span className="text-destructive">*</span>
+            {t("createLinkDialog.destinationUrl")} <span className="text-destructive">*</span>
           </Label>
           <Input
             id="original_url"
@@ -119,7 +121,7 @@ export function CreateLinkDialog({
           className="text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline"
           onClick={() => setShowAdvanced((v) => !v)}
         >
-          {showAdvanced ? "Hide" : "Show"} advanced options
+          {showAdvanced ? t("createLinkDialog.hideAdvanced") : t("createLinkDialog.showAdvanced")}
         </button>
 
         {showAdvanced && (
@@ -127,7 +129,7 @@ export function CreateLinkDialog({
             <Separator />
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="slug">Custom slug</Label>
+                <Label htmlFor="slug">{t("createLinkDialog.customSlug")}</Label>
                 <Input
                   id="slug"
                   name="slug"
@@ -135,13 +137,13 @@ export function CreateLinkDialog({
                   value={form.slug}
                   onChange={handleChange}
                   pattern="[A-Za-z0-9_-]*"
-                  title="Letters, numbers, hyphens and underscores only"
+                  title={t("createLinkDialog.slugPattern")}
                 />
-                <p className="text-xs text-muted-foreground">Leave blank to auto-generate.</p>
+                <p className="text-xs text-muted-foreground">{t("createLinkDialog.slugHint")}</p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="title">Title</Label>
+                <Label htmlFor="title">{t("createLinkDialog.titleLabel")}</Label>
                 <Input
                   id="title"
                   name="title"
@@ -152,7 +154,7 @@ export function CreateLinkDialog({
               </div>
 
               <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="expires_at">Expiry date &amp; time (optional)</Label>
+                <Label htmlFor="expires_at">{t("createLinkDialog.expiryLabel")}</Label>
                 <Input
                   id="expires_at"
                   name="expires_at"
@@ -174,11 +176,11 @@ export function CreateLinkDialog({
           onClick={() => onOpenChange?.(false)}
           disabled={isLoading}
         >
-          Cancel
+          {t("createLinkDialog.cancel")}
         </Button>
         <Button type="submit" form="create-link-form" disabled={isLoading}>
           <Plus className="mr-1 h-4 w-4" />
-          {isLoading ? "Creating…" : "Create link"}
+          {isLoading ? t("createLinkDialog.creating") : t("createLinkDialog.createLink")}
         </Button>
       </DialogFooter>
     </DialogContent>
@@ -190,7 +192,7 @@ export function CreateLinkDialog({
         <DialogTrigger asChild>
           <Button>
             <Plus className="mr-1 h-4 w-4" />
-            New link
+            {t("createLinkDialog.newLink")}
           </Button>
         </DialogTrigger>
         {content}

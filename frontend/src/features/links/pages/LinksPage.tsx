@@ -3,6 +3,7 @@
  */
 import { useEffect, useState } from "react";
 import { Search, Plus } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useLinksStore } from "../store/linksStore";
 import { LinksTable } from "../components/LinksTable";
 import { CreateLinkDialog } from "../components/CreateLinkDialog";
@@ -10,6 +11,7 @@ import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
 
 export function LinksPage() {
+  const { t } = useTranslation();
   const { links, pagination, isLoading, fetchLinks } = useLinksStore();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -32,9 +34,11 @@ export function LinksPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">All Links</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t("links.title")}</h1>
           <p className="text-muted-foreground mt-1">
-            {pagination ? `${pagination.count} link${pagination.count !== 1 ? "s" : ""}` : ""}
+            {pagination
+              ? t("links.count_other", { count: pagination.count })
+              : ""}
           </p>
         </div>
 
@@ -43,17 +47,17 @@ export function LinksPage() {
           <div className="relative">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
             <Input
-              placeholder="Search links…"
+              placeholder={t("links.searchPlaceholder")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-8 w-48 sm:w-64"
-              aria-label="Search links"
+              aria-label={t("links.searchPlaceholder")}
             />
           </div>
 
           <Button onClick={() => setDialogOpen(true)}>
             <Plus className="mr-1 h-4 w-4" />
-            New link
+            {t("links.newLink")}
           </Button>
           <CreateLinkDialog
             open={dialogOpen}
@@ -75,10 +79,10 @@ export function LinksPage() {
             disabled={!pagination.previous}
             onClick={() => fetchLinks(pagination.current_page - 1)}
           >
-            Previous
+            {t("links.previous")}
           </Button>
           <span className="text-sm text-muted-foreground">
-            Page {pagination.current_page} / {pagination.total_pages}
+            {t("links.page", { current: pagination.current_page, total: pagination.total_pages })}
           </span>
           <Button
             variant="outline"
@@ -86,7 +90,7 @@ export function LinksPage() {
             disabled={!pagination.next}
             onClick={() => fetchLinks(pagination.current_page + 1)}
           >
-            Next
+            {t("links.next")}
           </Button>
         </div>
       )}

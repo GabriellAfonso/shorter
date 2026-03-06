@@ -5,6 +5,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Copy, Trash2, BarChart2, ExternalLink, Check, ArrowUpDown } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import {
   Table,
   TableBody,
@@ -46,15 +47,16 @@ interface CopyButtonProps {
 }
 
 function CopyButton({ text }: CopyButtonProps) {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
   const handleCopy = async () => {
     await navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-    toast({ title: "Copied!", description: text });
+    toast({ title: t("table.copied"), description: text });
   };
   return (
-    <Button variant="ghost" size="icon" onClick={handleCopy} title="Copy short URL" aria-label="Copy">
+    <Button variant="ghost" size="icon" onClick={handleCopy} title={t("table.copyShortUrl")} aria-label={t("table.copy")}>
       {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
     </Button>
   );
@@ -66,6 +68,7 @@ interface LinksTableProps {
 }
 
 export function LinksTable({ isLoading = false, links: linksProp }: LinksTableProps) {
+  const { t } = useTranslation();
   const { links: storeLinks, deleteLink } = useLinksStore();
   const links = linksProp ?? storeLinks;
   const navigate = useNavigate();
@@ -83,13 +86,13 @@ export function LinksTable({ isLoading = false, links: linksProp }: LinksTablePr
   };
 
   const handleDelete = async (link: ShortURL) => {
-    if (!confirm(`Delete /${link.slug}? This cannot be undone.`)) return;
+    if (!confirm(t("table.confirmDelete", { slug: link.slug }))) return;
     setDeletingId(link.id);
     try {
       await deleteLink(link.id);
-      toast({ title: "Link deleted", description: `/${link.slug} was removed.` });
+      toast({ title: t("table.linkDeleted"), description: t("table.linkDeletedDesc", { slug: link.slug }) });
     } catch {
-      toast({ title: "Error", description: "Failed to delete link.", variant: "destructive" });
+      toast({ title: t("table.error"), description: t("table.deleteError"), variant: "destructive" });
     } finally {
       setDeletingId(null);
     }
@@ -121,8 +124,8 @@ export function LinksTable({ isLoading = false, links: linksProp }: LinksTablePr
   if (links.length === 0) {
     return (
       <div className="text-center py-16 text-muted-foreground">
-        <p className="text-lg font-medium">No links yet</p>
-        <p className="text-sm mt-1">Create your first short URL to get started.</p>
+        <p className="text-lg font-medium">{t("table.noLinksTitle")}</p>
+        <p className="text-sm mt-1">{t("table.noLinksDesc")}</p>
       </div>
     );
   }
@@ -134,12 +137,12 @@ export function LinksTable({ isLoading = false, links: linksProp }: LinksTablePr
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead><SortHeader col="title" label="Title / URL" /></TableHead>
-            <TableHead>Short URL</TableHead>
-            <TableHead><SortHeader col="click_count" label="Clicks" /></TableHead>
-            <TableHead><SortHeader col="created_at" label="Created" /></TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            <TableHead><SortHeader col="title" label={t("table.titleUrl")} /></TableHead>
+            <TableHead>{t("table.shortUrl")}</TableHead>
+            <TableHead><SortHeader col="click_count" label={t("table.clicks")} /></TableHead>
+            <TableHead><SortHeader col="created_at" label={t("table.created")} /></TableHead>
+            <TableHead>{t("table.status")}</TableHead>
+            <TableHead className="text-right">{t("table.actions")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -176,13 +179,13 @@ export function LinksTable({ isLoading = false, links: linksProp }: LinksTablePr
               {/* Status badge */}
               <TableCell>
                 {link.is_expired ? (
-                  <Badge variant="destructive">Expired</Badge>
+                  <Badge variant="destructive">{t("badge.expired")}</Badge>
                 ) : link.is_active ? (
                   <Badge variant="secondary" className="bg-green-500/15 text-green-600 border-green-500/20">
-                    Active
+                    {t("badge.active")}
                   </Badge>
                 ) : (
-                  <Badge variant="outline">Inactive</Badge>
+                  <Badge variant="outline">{t("badge.inactive")}</Badge>
                 )}
               </TableCell>
 
@@ -195,13 +198,13 @@ export function LinksTable({ isLoading = false, links: linksProp }: LinksTablePr
                     variant="ghost"
                     size="icon"
                     onClick={() => navigate(`/links/${link.id}/analytics`)}
-                    title="View analytics"
-                    aria-label="Analytics"
+                    title={t("table.viewAnalytics")}
+                    aria-label={t("table.analytics")}
                   >
                     <BarChart2 className="h-4 w-4" />
                   </Button>
 
-                  <Button variant="ghost" size="icon" asChild title="Open original" aria-label="Open">
+                  <Button variant="ghost" size="icon" asChild title={t("table.openOriginal")} aria-label={t("table.open")}>
                     <a href={link.original_url} target="_blank" rel="noopener noreferrer">
                       <ExternalLink className="h-4 w-4" />
                     </a>
@@ -212,8 +215,8 @@ export function LinksTable({ isLoading = false, links: linksProp }: LinksTablePr
                     size="icon"
                     onClick={() => handleDelete(link)}
                     disabled={deletingId === link.id}
-                    title="Delete"
-                    aria-label="Delete"
+                    title={t("table.delete")}
+                    aria-label={t("table.delete")}
                     className="text-destructive hover:text-destructive"
                   >
                     <Trash2 className="h-4 w-4" />

@@ -1,21 +1,41 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Link2, LayoutDashboard, TableProperties, LogOut, Menu, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/shared/components/ui/button";
 import { Separator } from "@/shared/components/ui/separator";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { cn } from "@/shared/lib/utils";
 
-const NAV_ITEMS = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/links", label: "All Links", icon: TableProperties },
-];
+function LanguageToggle() {
+  const { i18n, t } = useTranslation();
+  const toggle = () => {
+    i18n.changeLanguage(i18n.language === "pt-BR" ? "en" : "pt-BR");
+  };
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={toggle}
+      aria-label={t("language.ariaLabel")}
+      className="font-mono text-xs px-2"
+    >
+      {t("language.toggle")}
+    </Button>
+  );
+}
 
 export function Navbar() {
+  const { t } = useTranslation();
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const NAV_ITEMS = [
+    { to: "/dashboard", label: t("nav.dashboard"), icon: LayoutDashboard },
+    { to: "/links", label: t("nav.allLinks"), icon: TableProperties },
+  ];
 
   const handleLogout = async () => {
     await logout();
@@ -55,25 +75,35 @@ export function Navbar() {
               <span className="text-sm text-muted-foreground hidden md:block truncate max-w-[140px]">
                 {user.email}
               </span>
+              <LanguageToggle />
               <Button variant="ghost" size="sm" onClick={handleLogout}>
                 <LogOut className="mr-1 h-4 w-4" />
-                Logout
+                {t("nav.logout")}
               </Button>
             </div>
           </nav>
         )}
 
-        {/* Mobile hamburger */}
-        {user && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="sm:hidden"
-            onClick={() => setMobileOpen((v) => !v)}
-            aria-label="Toggle navigation menu"
-          >
-            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </Button>
+        {/* Language toggle (unauthenticated) + Mobile hamburger */}
+        <div className="flex items-center gap-1 sm:hidden">
+          {!user && <LanguageToggle />}
+          {user && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setMobileOpen((v) => !v)}
+              aria-label="Toggle navigation menu"
+            >
+              {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
+          )}
+        </div>
+
+        {/* Language toggle for unauthenticated desktop */}
+        {!user && (
+          <div className="hidden sm:block">
+            <LanguageToggle />
+          </div>
         )}
       </div>
 
@@ -96,15 +126,18 @@ export function Navbar() {
             </Button>
           ))}
           <Separator className="my-2" />
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start text-destructive hover:text-destructive"
-            onClick={handleLogout}
-          >
-            <LogOut className="mr-2 h-4 w-4" />
-            Logout
-          </Button>
+          <div className="flex items-center justify-between">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="justify-start text-destructive hover:text-destructive"
+              onClick={handleLogout}
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              {t("nav.logout")}
+            </Button>
+            <LanguageToggle />
+          </div>
         </div>
       )}
     </header>

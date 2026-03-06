@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Link2, MousePointerClick, TrendingUp } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useLinksStore } from "../store/linksStore";
 import { CreateLinkForm } from "../components/CreateLinkForm";
@@ -41,6 +42,7 @@ function StatCard({
 }
 
 export function DashboardPage() {
+  const { t } = useTranslation();
   const { user } = useAuthStore();
   const { links, pagination, isLoading, fetchLinks } = useLinksStore();
 
@@ -57,27 +59,29 @@ export function DashboardPage() {
       {/* Welcome header */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight">
-          {user?.first_name ? `Welcome back, ${user.first_name}` : "Dashboard"}
+          {user?.first_name
+            ? t("dashboard.welcomeBack", { name: user.first_name })
+            : t("dashboard.title")}
         </h1>
-        <p className="text-muted-foreground mt-1">Here's an overview of your links.</p>
+        <p className="text-muted-foreground mt-1">{t("dashboard.overview")}</p>
       </div>
 
       {/* Stats row */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         <StatCard
-          label="Total links"
+          label={t("dashboard.totalLinks")}
           value={formatNumber(pagination?.count ?? links.length)}
           icon={Link2}
           isLoading={isLoading}
         />
         <StatCard
-          label="Active links"
+          label={t("dashboard.activeLinks")}
           value={formatNumber(activeLinks)}
           icon={TrendingUp}
           isLoading={isLoading}
         />
         <StatCard
-          label="Total clicks"
+          label={t("dashboard.totalClicks")}
           value={formatNumber(totalClicks)}
           icon={MousePointerClick}
           isLoading={isLoading}
@@ -88,12 +92,12 @@ export function DashboardPage() {
       <CreateLinkForm />
 
       {/* Recent links */}
-      <section aria-label="Recent links">
+      <section aria-label={t("dashboard.recentLinks")}>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Recent Links</h2>
+          <h2 className="text-lg font-semibold">{t("dashboard.recentLinks")}</h2>
           <Button variant="ghost" size="sm" asChild>
             <Link to="/links">
-              View all
+              {t("dashboard.viewAll")}
               <ArrowRight className="ml-1 h-4 w-4" />
             </Link>
           </Button>
@@ -109,7 +113,7 @@ export function DashboardPage() {
 
         {!isLoading && recentLinks.length === 0 && (
           <p className="text-center text-muted-foreground py-8">
-            No links yet — create one above!
+            {t("dashboard.noLinks")}
           </p>
         )}
 
