@@ -31,7 +31,7 @@ export function LoginForm() {
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl">{t("auth.welcomeBack")}</CardTitle>
+        <CardTitle className="text-2xl">{t("auth.signIn")}</CardTitle>
         <CardDescription>{t("auth.signInToAccount")}</CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
