@@ -19,6 +19,7 @@ REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] = [  # noqa: F405
 REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {  # noqa: F405
     "anon": "1000/minute",
     "user": "5000/minute",
+    "auth": "10/minute",
 }
 
 # Use synchronous in-memory cache for tests (override per-test if needed)

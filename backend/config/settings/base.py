@@ -32,6 +32,7 @@ THIRD_PARTY_APPS = [
     "corsheaders",
     "django_celery_beat",
     "django_celery_results",
+    "drf_spectacular",
 ]
 
 LOCAL_APPS = [
@@ -136,6 +137,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "core.pagination.StandardResultsPagination",
     "PAGE_SIZE": 20,
     "EXCEPTION_HANDLER": "core.exceptions.custom_exception_handler",
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_THROTTLE_CLASSES": [
         "rest_framework.throttling.AnonRateThrottle",
         "rest_framework.throttling.UserRateThrottle",
@@ -144,6 +146,7 @@ REST_FRAMEWORK = {
         "anon": "60/minute",
         "user": "300/minute",
         # Feature-scoped rates (ScopedRateThrottle)
+        "auth": "10/minute",  # per IP (register + login)
         "link_create": "20/minute",  # per authenticated user
         "link_analytics": "60/minute",  # per authenticated user
         "redirect": "200/minute",  # per IP (Redis sliding window)
@@ -181,7 +184,7 @@ LANGUAGES = [
     ("pt-br", _("Portuguese (Brazil)")),
 ]
 LOCALE_PATHS = [BASE_DIR / "locale"]
-TIME_ZONE = "UTC"
+TIME_ZONE = "America/Sao_Paulo"
 USE_I18N = True
 USE_TZ = True
 
