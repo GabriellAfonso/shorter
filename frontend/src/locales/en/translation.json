@@ -15,7 +15,7 @@
     "password": "Password",
     "firstName": "First name",
     "lastName": "Last name",
-    "passwordPlaceholder": "Min. 8 characters",
+    "passwordPlaceholder": "********",
     "signingIn": "Signing in\u2026",
     "signIn": "Sign in",
     "creatingAccount": "Creating account\u2026",

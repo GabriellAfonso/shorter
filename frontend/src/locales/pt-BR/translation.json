@@ -15,7 +15,7 @@
     "password": "Senha",
     "firstName": "Nome",
     "lastName": "Sobrenome",
-    "passwordPlaceholder": "M\u00edn. 8 caracteres",
+    "passwordPlaceholder": "********",
     "signingIn": "Entrando\u2026",
     "signIn": "Entrar",
     "creatingAccount": "Criando conta\u2026",
