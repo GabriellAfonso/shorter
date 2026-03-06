@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 class MeView(APIView):
     """Retrieve the current authenticated user's profile."""
-
+    serializer_class = UserProfileSerializer
     permission_classes = [IsAuthenticated]
 
     def get(self, request: Request) -> Response:
@@ -24,7 +24,7 @@ class MeView(APIView):
 
 class UpdateProfileView(APIView):
     """Partially update the authenticated user's profile."""
-
+    serializer_class = UpdateProfileSerializer
     permission_classes = [IsAuthenticated]
 
     def patch(self, request: Request) -> Response:
@@ -37,7 +37,7 @@ class UpdateProfileView(APIView):
 
 class ChangePasswordView(APIView):
     """Change the authenticated user's password."""
-
+    serializer_class = ChangePasswordSerializer
     permission_classes = [IsAuthenticated]
 
     def post(self, request: Request) -> Response:
