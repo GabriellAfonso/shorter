@@ -12,12 +12,3 @@ class IsOwner(BasePermission):
 
     def has_object_permission(self, request, view, obj) -> bool:
         return bool(request.user and request.user.is_authenticated and obj.owner == request.user)
-
-
-class IsOwnerOrReadOnly(BasePermission):
-    """Read-only for everyone; full access for the owner."""
-
-    def has_object_permission(self, request, view, obj) -> bool:
-        if request.method in ("GET", "HEAD", "OPTIONS"):
-            return True
-        return bool(request.user and request.user.is_authenticated and obj.owner == request.user)
