@@ -9,8 +9,11 @@ import { cn } from "@/shared/lib/utils";
 
 function LanguageToggle() {
   const { i18n, t } = useTranslation();
+  const currentLang = i18n.language === "pt-BR" ? "PT" : "EN";
   const toggle = () => {
-    i18n.changeLanguage(i18n.language === "pt-BR" ? "en" : "pt-BR");
+    const next = i18n.language === "pt-BR" ? "en" : "pt-BR";
+    localStorage.setItem("i18n_lang", next);
+    i18n.changeLanguage(next);
   };
   return (
     <Button
@@ -20,7 +23,7 @@ function LanguageToggle() {
       aria-label={t("language.ariaLabel")}
       className="font-mono text-xs px-2"
     >
-      {t("language.toggle")}
+      {currentLang}
     </Button>
   );
 }
