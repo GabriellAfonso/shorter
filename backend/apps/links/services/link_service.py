@@ -91,15 +91,18 @@ def delete_short_url(*, link: ShortURL) -> None:
     logger.info("Deactivated link %s", link.slug)
 
 
-def get_redirect_url(slug: str) -> str | None:
+def get_redirect_url(slug: str) -> tuple[str, str] | None:
     """
-    Return the destination URL for a slug with Redis-backed caching.
+    Return (destination_url, link_id) for a slug with Redis-backed caching.
     Returns None if not found or expired.
+
+    Both values are cached together so the redirect view never needs a
+    second DB query to obtain the link id for async click logging.
     """
     key = _cache_key(slug)
     cached = cache.get(key)
-    if cached:
-        return cached
+    if cached is not None:
+        return cached["url"], cached["id"]
 
     from apps.links.selectors.link_selector import get_link_by_slug
     from core.exceptions import NotFound
@@ -110,8 +113,8 @@ def get_redirect_url(slug: str) -> str | None:
         return None
 
     ttl = _compute_ttl(link)
-    cache.set(key, link.original_url, ttl)
-    return link.original_url
+    cache.set(key, {"url": link.original_url, "id": str(link.id)}, ttl)
+    return link.original_url, str(link.id)
 
 
 def record_click(
@@ -166,7 +169,7 @@ def _compute_ttl(link: ShortURL) -> int:
     if link.expires_at:
         from django.utils import timezone
         remaining = int((link.expires_at - timezone.now()).total_seconds())
-        return min(remaining, default_ttl)
+        return max(1, min(remaining, default_ttl))
     return default_ttl
 
 

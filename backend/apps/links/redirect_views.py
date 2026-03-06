@@ -66,20 +66,20 @@ class RedirectView(View):
                 headers={"Retry-After": str(_RATE_WINDOW)},
             )
 
-        destination = get_redirect_url(slug)
+        result = get_redirect_url(slug)
 
-        if destination is None:
+        if result is None:
             return HttpResponseNotFound(
                 b"<h1>404 \xe2\x80\x94 Short URL not found or has expired.</h1>",
                 content_type="text/html; charset=utf-8",
             )
 
+        destination, link_id = result
+
         # Async click logging — does NOT block the redirect response.
         try:
-            from apps.links.models import ShortURL
-            link = ShortURL.objects.only("id").get(slug=slug, is_active=True)
             log_click.delay(
-                link_id=str(link.id),
+                link_id=link_id,
                 ip_address=ip,
                 user_agent=request.META.get("HTTP_USER_AGENT", "")[:500],
                 referrer=request.META.get("HTTP_REFERER", "")[:2048],
