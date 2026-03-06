@@ -9,9 +9,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
+ARG REQUIREMENTS_FILE=requirements.txt
+
 WORKDIR /wheels
-COPY requirements.txt .
-RUN pip wheel --no-cache-dir --wheel-dir /wheels -r requirements.txt
+COPY requirements.txt requirements-dev.txt ./
+RUN pip wheel --no-cache-dir --wheel-dir /wheels -r ${REQUIREMENTS_FILE}
 
 
 # ── Stage 2: runtime ──────────────────────────────────────────────────────
