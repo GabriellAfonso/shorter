@@ -3,6 +3,7 @@ Tests for the accounts feature.
 Covers: register, login, logout, token refresh, protected-endpoint guard.
 """
 import pytest
+from django.core.cache import cache as django_cache
 
 pytestmark = pytest.mark.integration
 from rest_framework import status
@@ -108,3 +109,82 @@ class TestTokenRefresh:
     def test_invalid_refresh_token_returns_401(self, api_client, db):
         response = api_client.post(REFRESH_URL, {"refresh": "invalid"}, format="json")
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+@pytest.mark.django_db
+class TestAuthThrottle:
+    """IP-based rate limiting for register and login endpoints."""
+
+    @pytest.fixture(autouse=True)
+    def _throttle_setup(self, monkeypatch):
+        """Lower throttle to 3/min and clear the throttle cache around each test."""
+        from apps.links.throttles import AuthRateThrottle
+        monkeypatch.setattr(AuthRateThrottle, "rate", "3/minute", raising=False)
+        django_cache.clear()
+        yield
+        django_cache.clear()
+
+    # ── Register ─────────────────────────────────────────────────────────────
+
+    def test_register_below_limit_returns_201(self, api_client):
+        payload = {"email": "throttle_ok@example.com", "password": "securepass1"}
+        response = api_client.post(REGISTER_URL, payload, format="json")
+        assert response.status_code == status.HTTP_201_CREATED
+
+    def test_register_returns_429_after_limit(self, api_client):
+        for i in range(3):
+            api_client.post(
+                REGISTER_URL,
+                {"email": f"reg{i}@example.com", "password": "securepass1"},
+                format="json",
+            )
+        response = api_client.post(
+            REGISTER_URL,
+            {"email": "reg_over@example.com", "password": "securepass1"},
+            format="json",
+        )
+        assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
+
+    def test_register_429_includes_retry_after(self, api_client):
+        for i in range(3):
+            api_client.post(
+                REGISTER_URL,
+                {"email": f"ra{i}@example.com", "password": "securepass1"},
+                format="json",
+            )
+        response = api_client.post(
+            REGISTER_URL,
+            {"email": "ra_over@example.com", "password": "securepass1"},
+            format="json",
+        )
+        assert "Retry-After" in response
+
+    # ── Login ─────────────────────────────────────────────────────────────────
+
+    def test_login_below_limit_returns_200(self, api_client, user):
+        user.set_password("testpass123")
+        user.save()
+        response = api_client.post(
+            LOGIN_URL, {"email": user.email, "password": "testpass123"}, format="json"
+        )
+        assert response.status_code == status.HTTP_200_OK
+
+    def test_login_returns_429_after_limit(self, api_client, user):
+        for _ in range(3):
+            api_client.post(
+                LOGIN_URL, {"email": user.email, "password": "wrong"}, format="json"
+            )
+        response = api_client.post(
+            LOGIN_URL, {"email": user.email, "password": "wrong"}, format="json"
+        )
+        assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
+
+    def test_login_429_includes_retry_after(self, api_client, user):
+        for _ in range(3):
+            api_client.post(
+                LOGIN_URL, {"email": user.email, "password": "wrong"}, format="json"
+            )
+        response = api_client.post(
+            LOGIN_URL, {"email": user.email, "password": "wrong"}, format="json"
+        )
+        assert "Retry-After" in response

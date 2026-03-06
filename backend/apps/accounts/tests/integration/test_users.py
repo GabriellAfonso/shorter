@@ -79,3 +79,59 @@ class TestChangePassword:
         }
         response = auth_client.post(self.url, payload, format="json")
         assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.django_db
+class TestChangePasswordTokenInvalidation:
+    """change_password must blacklist all outstanding tokens for the user."""
+
+    CHANGE_URL = "/api/v1/users/me/change-password/"
+    REFRESH_URL = "/api/v1/auth/token/refresh/"
+    PAYLOAD = {
+        "old_password": "testpass123",
+        "new_password": "newstrongpass!",
+        "confirm_password": "newstrongpass!",
+    }
+
+    def test_all_outstanding_tokens_blacklisted(self, auth_client):
+        from rest_framework_simplejwt.tokens import RefreshToken
+        from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
+
+        user = auth_client._user
+        # Issue a couple of extra tokens to ensure all are invalidated, not just the last one
+        RefreshToken.for_user(user)
+        RefreshToken.for_user(user)
+
+        outstanding_ids = set(OutstandingToken.objects.filter(user=user).values_list("id", flat=True))
+        assert outstanding_ids, "pre-condition: tokens must exist before change"
+
+        auth_client.post(self.CHANGE_URL, self.PAYLOAD, format="json")
+
+        blacklisted_token_ids = set(
+            BlacklistedToken.objects.filter(token__user=user).values_list("token_id", flat=True)
+        )
+        assert outstanding_ids.issubset(blacklisted_token_ids)
+
+    def test_refresh_token_rejected_after_password_change(self, auth_client, api_client):
+        from rest_framework_simplejwt.tokens import RefreshToken
+
+        user = auth_client._user
+        refresh = RefreshToken.for_user(user)
+
+        auth_client.post(self.CHANGE_URL, self.PAYLOAD, format="json")
+
+        response = api_client.post(self.REFRESH_URL, {"refresh": str(refresh)}, format="json")
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    def test_other_user_tokens_not_blacklisted(self, auth_client):
+        from rest_framework_simplejwt.tokens import RefreshToken
+        from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
+        from apps.accounts.tests.factories import UserFactory
+
+        other_user = UserFactory()
+        other_refresh = RefreshToken.for_user(other_user)
+        other_token_obj = OutstandingToken.objects.get(jti=other_refresh["jti"])
+
+        auth_client.post(self.CHANGE_URL, self.PAYLOAD, format="json")
+
+        assert not BlacklistedToken.objects.filter(token=other_token_obj).exists()
