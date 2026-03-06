@@ -9,13 +9,29 @@ User = get_user_model()
 
 class RegisterSerializer(serializers.Serializer):
     email = serializers.EmailField()
-    password = serializers.CharField(write_only=True, min_length=8)
-    first_name = serializers.CharField(max_length=150, required=False, default="")
-    last_name = serializers.CharField(max_length=150, required=False, default="")
+    password = serializers.CharField(
+        write_only=True,
+        min_length=6,
+        max_length=128,
+        error_messages={
+            "min_length": _("Password must be at least {min_length} characters."),
+            "max_length": _("Password must be at most {max_length} characters."),
+        },
+    )
+    first_name = serializers.CharField(
+        max_length=50,
+        required=False,
+        default="",
+        error_messages={"max_length": _("Max {max_length} characters.")},
+    )
+    last_name = serializers.CharField(
+        max_length=50,
+        required=False,
+        default="",
+        error_messages={"max_length": _("Max {max_length} characters.")},
+    )
 
-    @staticmethod
-    def validate_email(value: str) -> str:
-        """Fixed the 'static' warning by adding the decorator."""
+    def validate_email(self, value: str) -> str:
         if User.objects.filter(email__iexact=value).exists():
             raise serializers.ValidationError(_("A user with this email already exists."))
         return value.lower()

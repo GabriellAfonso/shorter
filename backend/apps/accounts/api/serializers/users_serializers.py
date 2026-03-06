@@ -29,17 +29,24 @@ class UserProfileSerializer(serializers.ModelSerializer):
         return obj.short_urls.filter(is_active=True).count()
 
 
+_NAME_FIELD_ERRORS = {"max_length": _("Max {max_length} characters.")}
+_PASS_FIELD_ERRORS = {
+    "min_length": _("Password must be at least {min_length} characters."),
+    "max_length": _("Password must be at most {max_length} characters."),
+}
+
+
 class UpdateProfileSerializer(serializers.Serializer):
-    first_name = serializers.CharField(max_length=150, required=False)
-    last_name = serializers.CharField(max_length=150, required=False)
+    first_name = serializers.CharField(max_length=50, required=False, error_messages=_NAME_FIELD_ERRORS)
+    last_name = serializers.CharField(max_length=50, required=False, error_messages=_NAME_FIELD_ERRORS)
     bio = serializers.CharField(max_length=500, allow_blank=True, required=False)
     avatar_url = serializers.URLField(allow_blank=True, required=False)
 
 
 class ChangePasswordSerializer(serializers.Serializer):
-    old_password = serializers.CharField(write_only=True, min_length=8)
-    new_password = serializers.CharField(write_only=True, min_length=8)
-    confirm_password = serializers.CharField(write_only=True, min_length=8)
+    old_password = serializers.CharField(write_only=True, min_length=6, max_length=128, error_messages=_PASS_FIELD_ERRORS)
+    new_password = serializers.CharField(write_only=True, min_length=6, max_length=128, error_messages=_PASS_FIELD_ERRORS)
+    confirm_password = serializers.CharField(write_only=True, min_length=6, max_length=128, error_messages=_PASS_FIELD_ERRORS)
 
     def validate(self, attrs):
         if attrs["new_password"] != attrs["confirm_password"]:

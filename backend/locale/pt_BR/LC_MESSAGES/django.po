@@ -61,9 +61,18 @@ msgstr "Você atingiu o limite de %(n)s links ativos. Exclua alguns links para c
 msgid "Expiry date must be in the future."
 msgstr "A data de expiração deve ser no futuro."
 
-# auth_serializers.py
+# auth_serializers.py / users_serializers.py
 msgid "A user with this email already exists."
 msgstr "Um usuário com este e-mail já existe."
+
+msgid "Max {max_length} characters."
+msgstr "Máx. {max_length} caracteres."
+
+msgid "Password must be at least {min_length} characters."
+msgstr "A senha deve ter pelo menos {min_length} caracteres."
+
+msgid "Password must be at most {max_length} characters."
+msgstr "A senha deve ter no máximo {max_length} caracteres."
 
 # users_serializers.py
 msgid "Passwords do not match."
