@@ -28,7 +28,7 @@ export function CreateLinkForm() {
         original_url: url,
         slug: customSlug || undefined,
         title: title || undefined,
-        expires_at: expiresAt || undefined,
+        expires_at: expiresAt ? new Date(expiresAt).toISOString() : undefined,
       });
       toast({
         title: t("createLink.linkCreated"),
@@ -113,7 +113,7 @@ export function CreateLinkForm() {
                   type="datetime-local"
                   value={expiresAt}
                   onChange={(e) => setExpiresAt(e.target.value)}
-                  min={new Date(Date.now() + 60_000).toISOString().slice(0, 16)}
+                  min={new Date(Date.now() + 60_000 - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 16)}
                 />
               </div>
             </div>

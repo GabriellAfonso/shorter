@@ -68,7 +68,7 @@ export function CreateLinkDialog({
         original_url: form.original_url,
         slug: form.slug || undefined,
         title: form.title || undefined,
-        expires_at: form.expires_at || null,
+        expires_at: form.expires_at ? new Date(form.expires_at).toISOString() : null,
       });
 
       toast({ title: t("createLinkDialog.linkCreated"), description: t("createLinkDialog.linkCreatedDesc", { url: link.short_url }) });
@@ -161,7 +161,7 @@ export function CreateLinkDialog({
                   type="datetime-local"
                   value={form.expires_at}
                   onChange={handleChange}
-                  min={new Date(Date.now() + 60_000).toISOString().slice(0, 16)}
+                  min={new Date(Date.now() + 60_000 - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 16)}
                 />
               </div>
             </div>
