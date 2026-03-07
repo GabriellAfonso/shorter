@@ -88,7 +88,7 @@ apiClient.interceptors.response.use(
 function clearAuthAndRedirect() {
   localStorage.removeItem("access_token");
   localStorage.removeItem("refresh_token");
-  window.location.href = "/login";
+  window.location.href = `${import.meta.env.BASE_URL}login`;
 }
 
 export default apiClient;

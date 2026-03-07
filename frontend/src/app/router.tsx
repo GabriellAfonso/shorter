@@ -8,7 +8,8 @@ import { DashboardPage } from "@/features/links/pages/DashboardPage";
 import { LinksPage } from "@/features/links/pages/LinksPage";
 import { AnalyticsPage } from "@/features/analytics/pages/AnalyticsPage";
 
-export const router = createBrowserRouter([
+export const router = createBrowserRouter(
+  [
   {
     path: "/",
     element: <Layout />,
@@ -47,4 +48,6 @@ export const router = createBrowserRouter([
       },
     ],
   },
-]);
+  ],
+  { basename: import.meta.env.BASE_URL.replace(/\/$/, "") || "/" }
+);
