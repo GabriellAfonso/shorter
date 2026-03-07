@@ -67,8 +67,12 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const user = await getMeApi();
       set({ user, isAuthenticated: true });
-    } catch {
-      set({ user: null, isAuthenticated: false });
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status === 401) {
+        set({ user: null, isAuthenticated: false });
+      }
+      // Erro de rede (backend ainda subindo) não desloga o usuário
     } finally {
       set({ isLoading: false });
     }

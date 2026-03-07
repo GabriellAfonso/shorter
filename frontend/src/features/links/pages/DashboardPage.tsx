@@ -45,11 +45,10 @@ export function DashboardPage() {
   const { t } = useTranslation();
   const { user } = useAuthStore();
   const { links, pagination, stats, isLoading, fetchLinks } = useLinksStore();
-  const [justLoggedIn] = useState(() => {
-    const flag = sessionStorage.getItem("just_logged_in") === "1";
+  const [justLoggedIn] = useState(() => sessionStorage.getItem("just_logged_in") === "1");
+  useEffect(() => {
     sessionStorage.removeItem("just_logged_in");
-    return flag;
-  });
+  }, []);
   useEffect(() => {
     fetchLinks(1);
   }, [fetchLinks]);
