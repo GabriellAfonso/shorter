@@ -57,7 +57,16 @@ class CreateShortURLSerializer(serializers.Serializer):
         if not stripped:
             return None
         from apps.links.validators import validate_custom_slug
-        return validate_custom_slug(stripped)
+        try:
+            return validate_custom_slug(stripped)
+        except serializers.ValidationError as exc:
+            # validate_custom_slug raises ValidationError({"slug": "msg"}) for use in
+            # views/services, but here DRF already binds the error to the slug field,
+            # so we unwrap the dict to avoid double-nesting in the response.
+            detail = exc.detail
+            if isinstance(detail, dict) and "slug" in detail:
+                raise serializers.ValidationError(detail["slug"])
+            raise
 
 
 class AnalyticsSerializer(serializers.Serializer):
