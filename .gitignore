@@ -172,7 +172,7 @@ GitHub.sublime-settings
 #docker
 compose.prod.yml
 docker-compose.prod.yml
-compose.yml
+compose.prod.yml
 .env.prod
 postgres
 ssl
@@ -185,3 +185,4 @@ CLAUDE.md
 .devcontainer
 _README.md
 TESTS_NEEDED.md
+compose.yml
