@@ -171,6 +171,7 @@ GitHub.sublime-settings
 
 # Exceções — lib/ acima ignora Python venvs mas não deve ignorar o frontend
 !frontend/src/shared/lib/
+frontend_dist/
 
 #docker
 compose.prod.yml
