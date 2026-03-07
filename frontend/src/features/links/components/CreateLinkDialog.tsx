@@ -81,7 +81,7 @@ export function CreateLinkDialog({
       )?.response?.data?.error?.details;
       const msg = details
         ? Object.entries(details)
-            .map(([field, errs]) => `${field}: ${errs.join(" ")}`)
+            .map(([field, errs]) => `${field}: ${Array.isArray(errs) ? errs.join(" ") : String(errs)}`)
             .join("; ")
         : t("createLinkDialog.createError");
       toast({ title: t("createLinkDialog.error"), description: msg, variant: "destructive" });
@@ -136,7 +136,7 @@ export function CreateLinkDialog({
                   placeholder="my-link"
                   value={form.slug}
                   onChange={handleChange}
-                  pattern="[A-Za-z0-9_-]*"
+                  pattern="[-A-Za-z0-9_]*"
                   title={t("createLinkDialog.slugPattern")}
                 />
                 <p className="text-xs text-muted-foreground">{t("createLinkDialog.slugHint")}</p>

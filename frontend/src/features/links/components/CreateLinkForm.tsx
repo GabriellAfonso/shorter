@@ -42,7 +42,7 @@ export function CreateLinkForm() {
       const details = (err as { response?: { data?: { error?: { details?: Record<string, string[]> } } } })
         ?.response?.data?.error?.details;
       const msg = details
-        ? Object.values(details).flat().join(" ")
+        ? Object.values(details).map(v => Array.isArray(v) ? v.join(" ") : String(v)).join(" ")
         : t("createLink.createError");
       toast({ title: t("createLink.error"), description: msg, variant: "destructive" });
     } finally {
@@ -93,7 +93,7 @@ export function CreateLinkForm() {
                   placeholder="my-link"
                   value={customSlug}
                   onChange={(e) => setCustomSlug(e.target.value)}
-                  pattern="[A-Za-z0-9_-]+"
+                  pattern="[-A-Za-z0-9_]+"
                   title={t("createLink.slugPattern")}
                 />
               </div>
