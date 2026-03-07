@@ -24,7 +24,8 @@ if not _base_domain:
 SHORT_URL_BASE_DOMAIN = _base_domain
 
 # ─── Security headers ──────────────────────────────────────────────────────
-SECURE_SSL_REDIRECT = True
+# nginx já faz o redirect HTTP→HTTPS; Django não deve fazer double-redirect
+SECURE_SSL_REDIRECT = False
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_HSTS_SECONDS = 31_536_000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
