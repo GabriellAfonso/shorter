@@ -169,6 +169,9 @@ GitHub.sublime-settings
 !.vscode/extensions.json 
 .history
 
+# Exceções — lib/ acima ignora Python venvs mas não deve ignorar o frontend
+!frontend/src/shared/lib/
+
 #docker
 compose.prod.yml
 docker-compose.prod.yml
