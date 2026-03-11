@@ -40,6 +40,13 @@ SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
 CORS_ALLOWED_ORIGINS = [o.strip() for o in os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",") if o.strip()]
 CORS_ALLOW_CREDENTIALS = True
 
+# ─── API Docs — correct public server prefix behind nginx reverse proxy ────
+# nginx strips /shorter before forwarding to Django, so Swagger UI must know
+# the real public base to build "Try it out" request URLs correctly.
+SPECTACULAR_SETTINGS = {
+    "SERVERS": [{"url": "/shorter", "description": "Production"}],
+}
+
 # ─── Logging ───────────────────────────────────────────────────────────────
 LOGGING = {
     **LOGGING,  # noqa: F405
