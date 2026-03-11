@@ -118,6 +118,23 @@ class TestRedirectEndpoint:
         response = client.get(f"/s/{link.slug}/", follow=False)
         assert response.status_code == 404
 
+    def test_inactive_link_returns_404(self, client):
+        link = ShortURLFactory(is_active=False)
+        response = client.get(f"/s/{link.slug}/", follow=False)
+        assert response.status_code == 404
+
+    def test_rate_limited_returns_429_with_retry_after(self, client):
+        from unittest.mock import patch
+        from django.test import override_settings
+
+        link = ShortURLFactory()
+        with override_settings(REDIRECT_RATE_LIMIT=1):
+            with patch("apps.links.redirect_views._is_rate_limited", return_value=True):
+                response = client.get(f"/s/{link.slug}/", follow=False)
+
+        assert response.status_code == 429
+        assert "Retry-After" in response
+
 
 @pytest.mark.django_db
 class TestLinkAnalytics:
