@@ -10,7 +10,7 @@ import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 # ─── Security ─────────────────────────────────────────────────────────────
-SECRET_KEY = os.environ.get("SECRET_KEY", "unsafe-secret-key-for-dev-only")
+SECRET_KEY = os.environ.get("SECRET_KEY", "unsafe-secret-key-for-dev-only!!")
 
 DEBUG = False
 ALLOWED_HOSTS: list[str] = os.environ.get("ALLOWED_HOSTS", "localhost").split(",")
