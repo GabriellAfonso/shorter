@@ -10,8 +10,8 @@ from apps.links.models.short_url import ShortURL
 
 logger = logging.getLogger(__name__)
 
-# Analytics cache: 5 minutes — fresh enough for near-real-time feel.
-_ANALYTICS_CACHE_TTL = 60 * 5
+
+_ANALYTICS_CACHE_TTL = 30
 _ANALYTICS_CACHE_KEY = "analytics:{link_id}:{days}"
 
 

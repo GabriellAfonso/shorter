@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import LinkAnalyticsView, LinkDetailView, LinkListCreateView
+from apps.links.api.views import LinkAnalyticsView, LinkDetailView, LinkListCreateView
 
 urlpatterns = [
     path("", LinkListCreateView.as_view(), name="links-list-create"),
