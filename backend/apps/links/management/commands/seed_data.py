@@ -6,16 +6,15 @@ Usage:
     python manage.py seed_data
     python manage.py seed_data --reset   # delete all existing data first
 """
+
 import random
-from datetime import timedelta
 
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
-from django.utils import timezone
 
 from apps.links.models.link_click import LinkClick
 from apps.links.models.short_url import ShortURL
-from apps.links.services.link_service import record_click
+from apps.links.services.link_service import _parse_user_agent
 
 User = get_user_model()
 
@@ -62,7 +61,7 @@ class Command(BaseCommand):
             User.objects.filter(email__in=["admin@demo.com", "user@demo.com"]).delete()
             self.stdout.write(self.style.WARNING("Demo data cleared."))
 
-        admin_user = self._get_or_create_user(
+        self._get_or_create_user(
             email="admin@demo.com",
             password="admin1234",
             first_name="Admin",
@@ -109,11 +108,7 @@ class Command(BaseCommand):
     def _generate_clicks(self, link: ShortURL, count: int) -> None:
         clicks = []
         for i in range(count):
-            # Spread clicks over the last 30 days.
-            days_ago = random.randint(0, 30)
             ua = random.choice(USER_AGENTS)
-            from apps.links.services.link_service import _parse_user_agent
-
             device = _parse_user_agent(ua)
             clicks.append(
                 LinkClick(

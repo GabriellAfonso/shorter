@@ -1,8 +1,8 @@
 """Business logic for user management."""
+
 import logging
 from django.contrib.auth import get_user_model
 from rest_framework.exceptions import ValidationError
-from apps.accounts.selectors.user_selector import user_exists
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -24,7 +24,14 @@ def create_user(*, email: str, password: str, first_name: str = "", last_name: s
     return user
 
 
-def update_user(*, user, first_name: str | None = None, last_name: str | None = None, bio: str | None = None, avatar_url: str | None = None):
+def update_user(
+    *,
+    user,
+    first_name: str | None = None,
+    last_name: str | None = None,
+    bio: str | None = None,
+    avatar_url: str | None = None,
+):
     """Update mutable profile fields. Only provided (non-None) fields are updated."""
     updated_fields = []
 
@@ -55,6 +62,7 @@ def change_password(*, user, old_password: str, new_password: str) -> None:
     user.save(update_fields=["password", "updated_at"])
 
     from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
+
     for token in OutstandingToken.objects.filter(user=user):
         BlacklistedToken.objects.get_or_create(token=token)
 
