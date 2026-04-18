@@ -2,14 +2,15 @@
 Tests for the accounts feature.
 Covers: register, login, logout, token refresh, protected-endpoint guard.
 """
+
 import pytest
 from django.core.cache import cache as django_cache
-
-pytestmark = pytest.mark.integration
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.accounts.tests.factories import UserFactory
+
+pytestmark = pytest.mark.integration
 
 REGISTER_URL = "/api/v1/auth/register/"
 LOGIN_URL = "/api/v1/auth/login/"
@@ -58,7 +59,9 @@ class TestLogin:
         user.set_password("testpass123")
         user.save()
 
-        response = api_client.post(LOGIN_URL, {"email": "login@example.com", "password": "testpass123"}, format="json")
+        response = api_client.post(
+            LOGIN_URL, {"email": "login@example.com", "password": "testpass123"}, format="json"
+        )
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert "access" in data
@@ -70,11 +73,15 @@ class TestLogin:
         user.set_password("correctpass")
         user.save()
 
-        response = api_client.post(LOGIN_URL, {"email": "test2@example.com", "password": "wrongpass"}, format="json")
+        response = api_client.post(
+            LOGIN_URL, {"email": "test2@example.com", "password": "wrongpass"}, format="json"
+        )
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     def test_login_nonexistent_user_returns_401(self, api_client, db):
-        response = api_client.post(LOGIN_URL, {"email": "ghost@example.com", "password": "pass"}, format="json")
+        response = api_client.post(
+            LOGIN_URL, {"email": "ghost@example.com", "password": "pass"}, format="json"
+        )
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
@@ -119,6 +126,7 @@ class TestAuthThrottle:
     def _throttle_setup(self, monkeypatch):
         """Lower throttle to 3/min and clear the throttle cache around each test."""
         from apps.links.throttles import AuthRateThrottle
+
         monkeypatch.setattr(AuthRateThrottle, "rate", "3/minute", raising=False)
         django_cache.clear()
         yield
@@ -171,9 +179,7 @@ class TestAuthThrottle:
 
     def test_login_returns_429_after_limit(self, api_client, user):
         for _ in range(3):
-            api_client.post(
-                LOGIN_URL, {"email": user.email, "password": "wrong"}, format="json"
-            )
+            api_client.post(LOGIN_URL, {"email": user.email, "password": "wrong"}, format="json")
         response = api_client.post(
             LOGIN_URL, {"email": user.email, "password": "wrong"}, format="json"
         )
@@ -181,9 +187,7 @@ class TestAuthThrottle:
 
     def test_login_429_includes_retry_after(self, api_client, user):
         for _ in range(3):
-            api_client.post(
-                LOGIN_URL, {"email": user.email, "password": "wrong"}, format="json"
-            )
+            api_client.post(LOGIN_URL, {"email": user.email, "password": "wrong"}, format="json")
         response = api_client.post(
             LOGIN_URL, {"email": user.email, "password": "wrong"}, format="json"
         )

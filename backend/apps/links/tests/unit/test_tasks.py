@@ -3,12 +3,11 @@ Tests for Celery tasks in the links feature.
 Covers: deactivate_expired_links cache invalidation, return value, and periodic schedule.
          log_click task — creates LinkClick, retries on error, graceful on missing link.
 """
+
 import uuid
 from unittest.mock import patch
 
 import pytest
-
-pytestmark = pytest.mark.unit
 from django.core.cache import cache
 from django.utils import timezone
 
@@ -16,10 +15,11 @@ from apps.links.models.link_click import LinkClick
 from apps.links.tasks import deactivate_expired_links, log_click
 from apps.links.tests.factories import ExpiredShortURLFactory, ShortURLFactory
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.mark.django_db
 class TestDeactivateExpiredLinks:
-
     def test_returns_count_of_deactivated_links(self):
         ExpiredShortURLFactory.create_batch(3)
         result = deactivate_expired_links()
@@ -42,9 +42,7 @@ class TestDeactivateExpiredLinks:
 
     def test_non_expired_links_not_affected(self):
         active = ShortURLFactory(expires_at=None)
-        future = ShortURLFactory(
-            expires_at=timezone.now() + timezone.timedelta(hours=1)
-        )
+        future = ShortURLFactory(expires_at=timezone.now() + timezone.timedelta(hours=1))
         cache.set(f"redirect:{active.slug}", active.original_url)
         cache.set(f"redirect:{future.slug}", future.original_url)
 
@@ -77,15 +75,18 @@ class TestDeactivateExpiredLinksPeriodicSchedule:
 
     def test_periodic_task_exists(self):
         from django_celery_beat.models import PeriodicTask
+
         assert PeriodicTask.objects.filter(name="Deactivate expired links").exists()
 
     def test_periodic_task_points_to_correct_task(self):
         from django_celery_beat.models import PeriodicTask
+
         pt = PeriodicTask.objects.get(name="Deactivate expired links")
         assert pt.task == "apps.links.tasks.deactivate_expired_links"
 
     def test_periodic_task_interval_is_10_minutes(self):
         from django_celery_beat.models import PeriodicTask
+
         pt = PeriodicTask.objects.get(name="Deactivate expired links")
         assert pt.interval.every == 10
         assert pt.interval.period == "minutes"

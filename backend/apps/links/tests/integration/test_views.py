@@ -2,13 +2,14 @@
 Tests for links API views.
 Covers: CRUD, analytics, redirect endpoint, ownership enforcement.
 """
-import pytest
 
-pytestmark = pytest.mark.integration
+import pytest
 from rest_framework import status
 
-from apps.links.tests.factories import ExpiredShortURLFactory, ShortURLFactory
 from apps.accounts.tests.factories import UserFactory
+from apps.links.tests.factories import ExpiredShortURLFactory, ShortURLFactory
+
+pytestmark = pytest.mark.integration
 
 LINKS_URL = "/api/v1/links/"
 
@@ -91,7 +92,6 @@ class TestLinkDetail:
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
         # Re-check the link is soft-deleted.
-        from apps.links.models import ShortURL
         link.refresh_from_db()
         assert link.is_active is False
 
@@ -140,6 +140,7 @@ class TestRedirectEndpoint:
 class TestLinkAnalytics:
     def test_analytics_returns_expected_shape(self, auth_client):
         from apps.links.tests.factories import LinkClickFactory
+
         link = ShortURLFactory(owner=auth_client._user, click_count=5)
         LinkClickFactory.create_batch(5, link=link)
 

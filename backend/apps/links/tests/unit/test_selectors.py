@@ -1,11 +1,12 @@
 """Unit tests for link_selector.get_link_by_slug edge cases."""
-import pytest
 
-pytestmark = pytest.mark.unit
+import pytest
 
 from apps.links.selectors.link_selector import get_link_by_slug
 from apps.links.tests.factories import ExpiredShortURLFactory, ShortURLFactory
 from core.exceptions import NotFound
+
+pytestmark = pytest.mark.unit
 
 
 @pytest.mark.django_db

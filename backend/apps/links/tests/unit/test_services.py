@@ -2,17 +2,23 @@
 Tests for links business logic (services).
 Covers: slug generation, URL creation, collision handling, delete, redirect cache.
 """
-import pytest
 
-pytestmark = pytest.mark.unit
+import pytest
 from django.core.cache import cache
 
-from apps.links.models import ShortURL
-from apps.links.services.link_service import create_short_url, delete_short_url, get_redirect_url, record_click
-from apps.links.tests.factories import ShortURLFactory
 from apps.accounts.tests.factories import UserFactory
+from apps.links.models import ShortURL
+from apps.links.services.link_service import (
+    create_short_url,
+    delete_short_url,
+    get_redirect_url,
+    record_click,
+)
+from apps.links.tests.factories import ShortURLFactory
 from core.exceptions import QuotaExceeded
 from core.utils import generate_slug
+
+pytestmark = pytest.mark.unit
 
 
 @pytest.mark.django_db
@@ -45,18 +51,22 @@ class TestCreateShortURL:
 
     def test_create_with_custom_slug(self):
         user = UserFactory()
-        link = create_short_url(original_url="https://example.com", owner=user, custom_slug="myslug")
+        link = create_short_url(
+            original_url="https://example.com", owner=user, custom_slug="myslug"
+        )
         assert link.slug == "myslug"
 
     def test_create_with_duplicate_custom_slug_raises(self):
         user = UserFactory()
         ShortURLFactory(slug="taken")
         from rest_framework.exceptions import ValidationError
+
         with pytest.raises(ValidationError):
             create_short_url(original_url="https://example.com", owner=user, custom_slug="taken")
 
     def test_create_with_expiry(self):
         from django.utils import timezone
+
         user = UserFactory()
         future = timezone.now() + timezone.timedelta(days=7)
         link = create_short_url(original_url="https://example.com", owner=user, expires_at=future)
@@ -77,7 +87,7 @@ class TestCreateShortURL:
     def test_inactive_links_excluded_from_quota_count(self, settings):
         settings.MAX_LINKS_PER_USER = 2
         user = UserFactory()
-        ShortURLFactory.create_batch(2, owner=user, is_active=True)   # exactly at limit
+        ShortURLFactory.create_batch(2, owner=user, is_active=True)  # exactly at limit
         ShortURLFactory.create_batch(2, owner=user, is_active=False)  # inactive — must not count
         # 2 active links = at the limit; inactive links are irrelevant
         with pytest.raises(QuotaExceeded):
@@ -142,6 +152,7 @@ class TestGetRedirectURL:
 class TestRecordClick:
     def test_creates_link_click_and_increments_count(self):
         from apps.links.models import LinkClick
+
         link = ShortURLFactory()
         record_click(
             link_id=str(link.id),

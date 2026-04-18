@@ -2,10 +2,11 @@
 Tests for the users feature.
 Covers: profile retrieval, profile update, password change.
 """
+
 import pytest
+from rest_framework import status
 
 pytestmark = pytest.mark.integration
-from rest_framework import status
 
 
 @pytest.mark.django_db
@@ -95,14 +96,19 @@ class TestChangePasswordTokenInvalidation:
 
     def test_all_outstanding_tokens_blacklisted(self, auth_client):
         from rest_framework_simplejwt.tokens import RefreshToken
-        from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
+        from rest_framework_simplejwt.token_blacklist.models import (
+            BlacklistedToken,
+            OutstandingToken,
+        )
 
         user = auth_client._user
         # Issue a couple of extra tokens to ensure all are invalidated, not just the last one
         RefreshToken.for_user(user)
         RefreshToken.for_user(user)
 
-        outstanding_ids = set(OutstandingToken.objects.filter(user=user).values_list("id", flat=True))
+        outstanding_ids = set(
+            OutstandingToken.objects.filter(user=user).values_list("id", flat=True)
+        )
         assert outstanding_ids, "pre-condition: tokens must exist before change"
 
         auth_client.post(self.CHANGE_URL, self.PAYLOAD, format="json")
@@ -125,7 +131,10 @@ class TestChangePasswordTokenInvalidation:
 
     def test_other_user_tokens_not_blacklisted(self, auth_client):
         from rest_framework_simplejwt.tokens import RefreshToken
-        from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
+        from rest_framework_simplejwt.token_blacklist.models import (
+            BlacklistedToken,
+            OutstandingToken,
+        )
         from apps.accounts.tests.factories import UserFactory
 
         other_user = UserFactory()
