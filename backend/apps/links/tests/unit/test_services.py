@@ -3,12 +3,21 @@ Tests for links business logic (services).
 Covers: slug generation, URL creation, collision handling, delete, redirect cache.
 """
 
+from datetime import timedelta
+from types import SimpleNamespace
+from unittest.mock import patch
+
 import pytest
 from django.core.cache import cache
+from django.utils import timezone
+from freezegun import freeze_time
 
 from apps.accounts.tests.factories import UserFactory
 from apps.links.models import ShortURL
 from apps.links.services.link_service import (
+    _compute_ttl,
+    _generate_unique_slug,
+    _parse_user_agent,
     create_short_url,
     delete_short_url,
     get_redirect_url,
@@ -171,3 +180,71 @@ class TestRecordClick:
             user_agent="",
             referrer="",
         )
+
+
+class TestComputeTTL:
+    """Tests for redirect cache TTL computation."""
+
+    def test_no_expiry_returns_default_ttl(self, settings):
+        settings.REDIRECT_CACHE_TTL = 86400
+        link = SimpleNamespace(expires_at=None)
+        assert _compute_ttl(link) == 86400
+
+    @freeze_time("2026-01-01 12:00:00")
+    def test_far_expiry_capped_at_default_ttl(self, settings):
+        settings.REDIRECT_CACHE_TTL = 3600
+        link = SimpleNamespace(expires_at=timezone.now() + timedelta(days=30))
+        assert _compute_ttl(link) == 3600
+
+    @freeze_time("2026-01-01 12:00:00")
+    def test_near_expiry_returns_remaining_seconds(self, settings):
+        settings.REDIRECT_CACHE_TTL = 86400
+        link = SimpleNamespace(expires_at=timezone.now() + timedelta(seconds=100))
+        assert _compute_ttl(link) == 100
+
+    @freeze_time("2026-01-01 12:00:00")
+    def test_past_expiry_clamped_to_minimum_1(self, settings):
+        settings.REDIRECT_CACHE_TTL = 86400
+        link = SimpleNamespace(expires_at=timezone.now() - timedelta(seconds=10))
+        assert _compute_ttl(link) == 1
+
+
+class TestParseUserAgent:
+    """Tests for device classification from user-agent strings."""
+
+    def test_chrome_desktop_detected(self):
+        ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/121.0 Safari/537.36"
+        result = _parse_user_agent(ua)
+        assert result["device_type"] == "desktop"
+        assert result["browser"] != ""
+        assert result["os"] != ""
+
+    def test_iphone_classified_as_mobile(self):
+        ua = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0) AppleWebKit/605.1.15 Mobile/15E148"
+        result = _parse_user_agent(ua)
+        assert result["device_type"] == "mobile"
+
+    def test_googlebot_classified_as_bot(self):
+        ua = "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
+        result = _parse_user_agent(ua)
+        assert result["device_type"] == "bot"
+
+    def test_empty_string_does_not_raise(self):
+        result = _parse_user_agent("")
+        assert "device_type" in result
+        assert "browser" in result
+        assert "os" in result
+
+    def test_exception_returns_unknown_fallback(self):
+        with patch("user_agents.parse", side_effect=Exception("broken")):
+            result = _parse_user_agent("anything")
+        assert result == {"browser": "", "os": "", "device_type": "unknown"}
+
+
+class TestSlugCollisionExhaustion:
+    def test_raises_validation_error_when_all_retries_exhausted(self):
+        from rest_framework.exceptions import ValidationError
+
+        with patch("apps.links.services.link_service.slug_exists", return_value=True):
+            with pytest.raises(ValidationError):
+                _generate_unique_slug(max_retries=5)
