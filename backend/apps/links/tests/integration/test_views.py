@@ -3,11 +3,15 @@ Tests for links API views.
 Covers: CRUD, analytics, redirect endpoint, ownership enforcement.
 """
 
+from unittest.mock import patch
+
 import pytest
+from django.core.cache import cache as django_cache
 from rest_framework import status
 
 from apps.accounts.tests.factories import UserFactory
-from apps.links.tests.factories import ExpiredShortURLFactory, ShortURLFactory
+from apps.links.tests.factories import ExpiredShortURLFactory, LinkClickFactory, ShortURLFactory
+from apps.links.throttles import LinkCreateThrottle
 
 pytestmark = pytest.mark.integration
 
@@ -124,16 +128,48 @@ class TestRedirectEndpoint:
         assert response.status_code == 404
 
     def test_rate_limited_returns_429_with_retry_after(self, client):
-        from unittest.mock import patch
-        from django.test import override_settings
-
         link = ShortURLFactory()
-        with override_settings(REDIRECT_RATE_LIMIT=1):
-            with patch("apps.links.redirect_views._is_rate_limited", return_value=True):
-                response = client.get(f"/s/{link.slug}/", follow=False)
-
+        with patch("apps.links.redirect_views._is_rate_limited", return_value=True):
+            response = client.get(f"/s/{link.slug}/", follow=False)
         assert response.status_code == 429
         assert "Retry-After" in response
+
+    def test_redirect_dispatches_log_click_with_correct_args(self, client):
+        link = ShortURLFactory(original_url="https://target.com")
+        with patch("apps.links.redirect_views.log_click") as mock_task:
+            client.get(
+                f"/s/{link.slug}/",
+                follow=False,
+                HTTP_USER_AGENT="TestBrowser/1.0",
+                HTTP_REFERER="https://referrer.com",
+            )
+        mock_task.delay.assert_called_once()
+        kwargs = mock_task.delay.call_args.kwargs
+        assert kwargs["link_id"] == str(link.id)
+        assert kwargs["user_agent"] == "TestBrowser/1.0"
+        assert kwargs["referrer"] == "https://referrer.com"
+
+    def test_redirect_populates_cache(self, client):
+        link = ShortURLFactory()
+        with patch("apps.links.redirect_views.log_click"):
+            client.get(f"/s/{link.slug}/", follow=False)
+        assert django_cache.get(f"redirect:{link.slug}") is not None
+
+    def test_redirect_truncates_user_agent_to_500_chars(self, client):
+        link = ShortURLFactory()
+        with patch("apps.links.redirect_views.log_click") as mock_task:
+            client.get(f"/s/{link.slug}/", follow=False, HTTP_USER_AGENT="X" * 600)
+        kwargs = mock_task.delay.call_args.kwargs
+        assert len(kwargs["user_agent"]) == 500
+
+    def test_log_click_failure_does_not_prevent_redirect(self, client):
+        link = ShortURLFactory(original_url="https://target.com")
+        with patch(
+            "apps.links.redirect_views.log_click.delay", side_effect=Exception("Celery down")
+        ):
+            response = client.get(f"/s/{link.slug}/", follow=False)
+        assert response.status_code == 302
+        assert response["Location"] == "https://target.com"
 
 
 @pytest.mark.django_db
@@ -156,3 +192,66 @@ class TestLinkAnalytics:
         other_link = ShortURLFactory(owner=UserFactory())
         response = auth_client.get(f"{LINKS_URL}{other_link.id}/analytics/")
         assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_analytics_period_days_matches_query_param(self, auth_client):
+        link = ShortURLFactory(owner=auth_client._user)
+        response = auth_client.get(f"{LINKS_URL}{link.id}/analytics/?days=7")
+        assert response.json()["period_days"] == 7
+
+    def test_analytics_invalid_days_param_defaults_to_30(self, auth_client):
+        link = ShortURLFactory(owner=auth_client._user)
+        response = auth_client.get(f"{LINKS_URL}{link.id}/analytics/?days=invalid")
+        assert response.json()["period_days"] == 30
+
+    def test_analytics_by_device_breakdown_counts_correctly(self, auth_client):
+        link = ShortURLFactory(owner=auth_client._user, click_count=5)
+        LinkClickFactory.create_batch(3, link=link, device_type="mobile")
+        LinkClickFactory.create_batch(2, link=link, device_type="desktop")
+        by_device = {
+            d["device_type"]: d["count"]
+            for d in auth_client.get(f"{LINKS_URL}{link.id}/analytics/").json()["by_device"]
+        }
+        assert by_device["mobile"] == 3
+        assert by_device["desktop"] == 2
+
+    def test_analytics_top_referrers_excludes_empty_strings(self, auth_client):
+        link = ShortURLFactory(owner=auth_client._user, click_count=3)
+        LinkClickFactory.create_batch(2, link=link, referrer="https://google.com")
+        LinkClickFactory(link=link, referrer="")
+        referrers = [
+            r["referrer"]
+            for r in auth_client.get(f"{LINKS_URL}{link.id}/analytics/").json()["top_referrers"]
+        ]
+        assert "" not in referrers
+
+    def test_analytics_clicks_in_period_correct(self, auth_client):
+        link = ShortURLFactory(owner=auth_client._user, click_count=3)
+        LinkClickFactory.create_batch(3, link=link)
+        data = auth_client.get(f"{LINKS_URL}{link.id}/analytics/?days=30").json()
+        assert data["clicks_in_period"] == 3
+
+
+@pytest.mark.django_db
+class TestLinkCreateThrottle:
+    @pytest.fixture(autouse=True)
+    def _throttle_setup(self, monkeypatch):
+        monkeypatch.setattr(LinkCreateThrottle, "get_rate", lambda self: "3/minute")
+        django_cache.clear()
+        yield
+        django_cache.clear()
+
+    def test_returns_429_after_limit_exceeded(self, auth_client):
+        for _ in range(3):
+            auth_client.post(LINKS_URL, {"original_url": "https://example.com"}, format="json")
+        response = auth_client.post(
+            LINKS_URL, {"original_url": "https://example.com"}, format="json"
+        )
+        assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
+
+    def test_429_includes_retry_after_header(self, auth_client):
+        for _ in range(3):
+            auth_client.post(LINKS_URL, {"original_url": "https://example.com"}, format="json")
+        response = auth_client.post(
+            LINKS_URL, {"original_url": "https://example.com"}, format="json"
+        )
+        assert "Retry-After" in response
