@@ -56,7 +56,13 @@ function CopyButton({ text }: CopyButtonProps) {
     toast({ title: t("table.copied"), description: text });
   };
   return (
-    <Button variant="ghost" size="icon" onClick={handleCopy} title={t("table.copyShortUrl")} aria-label={t("table.copy")}>
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={handleCopy}
+      title={t("table.copyShortUrl")}
+      aria-label={t("table.copy")}
+    >
       {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
     </Button>
   );
@@ -90,9 +96,16 @@ export function LinksTable({ isLoading = false, links: linksProp }: LinksTablePr
     setDeletingId(link.id);
     try {
       await deleteLink(link.id);
-      toast({ title: t("table.linkDeleted"), description: t("table.linkDeletedDesc", { slug: link.slug }) });
+      toast({
+        title: t("table.linkDeleted"),
+        description: t("table.linkDeletedDesc", { slug: link.slug }),
+      });
     } catch {
-      toast({ title: t("table.error"), description: t("table.deleteError"), variant: "destructive" });
+      toast({
+        title: t("table.error"),
+        description: t("table.deleteError"),
+        variant: "destructive",
+      });
     } finally {
       setDeletingId(null);
     }
@@ -137,10 +150,16 @@ export function LinksTable({ isLoading = false, links: linksProp }: LinksTablePr
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead><SortHeader col="title" label={t("table.titleUrl")} /></TableHead>
+            <TableHead>
+              <SortHeader col="title" label={t("table.titleUrl")} />
+            </TableHead>
             <TableHead>{t("table.shortUrl")}</TableHead>
-            <TableHead><SortHeader col="click_count" label={t("table.clicks")} /></TableHead>
-            <TableHead><SortHeader col="created_at" label={t("table.created")} /></TableHead>
+            <TableHead>
+              <SortHeader col="click_count" label={t("table.clicks")} />
+            </TableHead>
+            <TableHead>
+              <SortHeader col="created_at" label={t("table.created")} />
+            </TableHead>
             <TableHead>{t("table.status")}</TableHead>
             <TableHead className="text-right">{t("table.actions")}</TableHead>
           </TableRow>
@@ -181,7 +200,10 @@ export function LinksTable({ isLoading = false, links: linksProp }: LinksTablePr
                 {link.is_expired ? (
                   <Badge variant="destructive">{t("badge.expired")}</Badge>
                 ) : link.is_active ? (
-                  <Badge variant="secondary" className="bg-green-500/15 text-green-600 border-green-500/20">
+                  <Badge
+                    variant="secondary"
+                    className="bg-green-500/15 text-green-600 border-green-500/20"
+                  >
                     {t("badge.active")}
                   </Badge>
                 ) : (
@@ -204,7 +226,13 @@ export function LinksTable({ isLoading = false, links: linksProp }: LinksTablePr
                     <BarChart2 className="h-4 w-4" />
                   </Button>
 
-                  <Button variant="ghost" size="icon" asChild title={t("table.openOriginal")} aria-label={t("table.open")}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    asChild
+                    title={t("table.openOriginal")}
+                    aria-label={t("table.open")}
+                  >
                     <a href={link.original_url} target="_blank" rel="noopener noreferrer">
                       <ExternalLink className="h-4 w-4" />
                     </a>

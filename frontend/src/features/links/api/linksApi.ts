@@ -1,5 +1,11 @@
 import apiClient from "@/api/client";
-import type { CreateLinkPayload, LinkAnalytics, LinkStats, PaginatedResponse, ShortURL } from "@/types";
+import type {
+  CreateLinkPayload,
+  LinkAnalytics,
+  LinkStats,
+  PaginatedResponse,
+  ShortURL,
+} from "@/types";
 
 export interface LinksListResponse extends PaginatedResponse<ShortURL> {
   stats: LinkStats;

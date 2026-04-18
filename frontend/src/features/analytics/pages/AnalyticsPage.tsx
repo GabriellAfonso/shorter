@@ -38,7 +38,12 @@ export function AnalyticsPage() {
         <h1 className="text-2xl font-bold">{t("analytics.title")}</h1>
         <div className="flex gap-2">
           {[7, 30, 90].map((d) => (
-            <Button key={d} size="sm" variant={days === d ? "default" : "outline"} onClick={() => setDays(d)}>
+            <Button
+              key={d}
+              size="sm"
+              variant={days === d ? "default" : "outline"}
+              onClick={() => setDays(d)}
+            >
               {d}d
             </Button>
           ))}
@@ -55,8 +60,14 @@ export function AnalyticsPage() {
         <>
           {/* Summary cards */}
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-            <StatCard label={t("analytics.totalClicks")} value={formatNumber(analytics.total_clicks)} />
-            <StatCard label={t("analytics.clicksInPeriod", { days })} value={formatNumber(analytics.clicks_in_period)} />
+            <StatCard
+              label={t("analytics.totalClicks")}
+              value={formatNumber(analytics.total_clicks)}
+            />
+            <StatCard
+              label={t("analytics.clicksInPeriod", { days })}
+              value={formatNumber(analytics.clicks_in_period)}
+            />
           </div>
 
           {/* Daily clicks chart */}
@@ -68,7 +79,9 @@ export function AnalyticsPage() {
               {analytics.daily_clicks.length > 0 ? (
                 <DailyClicksChart data={analytics.daily_clicks} />
               ) : (
-                <p className="text-sm text-muted-foreground text-center py-8">{t("analytics.noClickData")}</p>
+                <p className="text-sm text-muted-foreground text-center py-8">
+                  {t("analytics.noClickData")}
+                </p>
               )}
             </CardContent>
           </Card>
@@ -91,12 +104,17 @@ export function AnalyticsPage() {
               </CardHeader>
               <CardContent>
                 {analytics.top_referrers.length === 0 ? (
-                  <p className="text-sm text-muted-foreground py-8 text-center">{t("analytics.noReferrerData")}</p>
+                  <p className="text-sm text-muted-foreground py-8 text-center">
+                    {t("analytics.noReferrerData")}
+                  </p>
                 ) : (
                   <ul className="space-y-2">
                     {analytics.top_referrers.map((r) => (
                       <li key={r.referrer} className="flex items-center justify-between text-sm">
-                        <span className="truncate text-muted-foreground max-w-[160px]" title={r.referrer}>
+                        <span
+                          className="truncate text-muted-foreground max-w-[160px]"
+                          title={r.referrer}
+                        >
                           {r.referrer || t("analytics.direct")}
                         </span>
                         <span className="font-medium">{formatNumber(r.count)}</span>

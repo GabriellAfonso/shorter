@@ -5,7 +5,8 @@
  * - On 401, attempts a silent token refresh using the stored refresh token.
  * - If refresh fails, clears accounts state and redirects to /login.
  */
-import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
+import type { AxiosError, InternalAxiosRequestConfig } from "axios";
+import axios from "axios";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000/api/v1";
 
@@ -66,7 +67,9 @@ apiClient.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const { data } = await axios.post(`${BASE_URL}/auth/token/refresh/`, { refresh: refreshToken });
+        const { data } = await axios.post(`${BASE_URL}/auth/token/refresh/`, {
+          refresh: refreshToken,
+        });
         const newAccessToken: string = data.access;
         localStorage.setItem("access_token", newAccessToken);
         processQueue(null, newAccessToken);

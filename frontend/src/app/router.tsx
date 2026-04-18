@@ -10,44 +10,44 @@ import { AnalyticsPage } from "@/features/analytics/pages/AnalyticsPage";
 
 export const router = createBrowserRouter(
   [
-  {
-    path: "/",
-    element: <Layout />,
-    children: [
-      { index: true, element: <Navigate to="/dashboard" replace /> },
-      { path: "login", element: <LoginPage /> },
-      { path: "register", element: <RegisterPage /> },
-      {
-        element: <ProtectedRoute />,
-        children: [
-          {
-            path: "dashboard",
-            element: (
-              <ErrorBoundary>
-                <DashboardPage />
-              </ErrorBoundary>
-            ),
-          },
-          {
-            path: "links",
-            element: (
-              <ErrorBoundary>
-                <LinksPage />
-              </ErrorBoundary>
-            ),
-          },
-          {
-            path: "links/:linkId/analytics",
-            element: (
-              <ErrorBoundary>
-                <AnalyticsPage />
-              </ErrorBoundary>
-            ),
-          },
-        ],
-      },
-    ],
-  },
+    {
+      path: "/",
+      element: <Layout />,
+      children: [
+        { index: true, element: <Navigate to="/dashboard" replace /> },
+        { path: "login", element: <LoginPage /> },
+        { path: "register", element: <RegisterPage /> },
+        {
+          element: <ProtectedRoute />,
+          children: [
+            {
+              path: "dashboard",
+              element: (
+                <ErrorBoundary>
+                  <DashboardPage />
+                </ErrorBoundary>
+              ),
+            },
+            {
+              path: "links",
+              element: (
+                <ErrorBoundary>
+                  <LinksPage />
+                </ErrorBoundary>
+              ),
+            },
+            {
+              path: "links/:linkId/analytics",
+              element: (
+                <ErrorBoundary>
+                  <AnalyticsPage />
+                </ErrorBoundary>
+              ),
+            },
+          ],
+        },
+      ],
+    },
   ],
   { basename: import.meta.env.BASE_URL.replace(/\/$/, "") || "/" }
 );

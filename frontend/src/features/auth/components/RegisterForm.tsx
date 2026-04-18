@@ -6,7 +6,14 @@ import { useAuthStore } from "../store/authStore";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/shared/components/ui/card";
 
 type FieldErrors = Record<string, string[]>;
 
@@ -37,9 +44,8 @@ export function RegisterForm() {
       await register(form);
       navigate("/dashboard");
     } catch (err: unknown) {
-      const details =
-        (err as { response?: { data?: { error?: { details?: FieldErrors } } } })
-          ?.response?.data?.error?.details;
+      const details = (err as { response?: { data?: { error?: { details?: FieldErrors } } } })
+        ?.response?.data?.error?.details;
       if (details) {
         setFieldErrors(details);
       } else {
@@ -66,12 +72,24 @@ export function RegisterForm() {
             <div className="space-y-2">
               {fieldError("first_name")}
               <Label htmlFor="first_name">{t("auth.firstName")}</Label>
-              <Input id="first_name" name="first_name" placeholder="Jane" onChange={handleChange} autoComplete="given-name" />
+              <Input
+                id="first_name"
+                name="first_name"
+                placeholder="Jane"
+                onChange={handleChange}
+                autoComplete="given-name"
+              />
             </div>
             <div className="space-y-2">
               {fieldError("last_name")}
               <Label htmlFor="last_name">{t("auth.lastName")}</Label>
-              <Input id="last_name" name="last_name" placeholder="Doe" onChange={handleChange} autoComplete="family-name" />
+              <Input
+                id="last_name"
+                name="last_name"
+                placeholder="Doe"
+                onChange={handleChange}
+                autoComplete="family-name"
+              />
             </div>
           </div>
           <div className="space-y-2">
@@ -120,7 +138,10 @@ export function RegisterForm() {
           </Button>
           <p className="text-sm text-muted-foreground text-center">
             {t("auth.alreadyHaveAccount")}{" "}
-            <Link to="/login" className="text-primary underline underline-offset-4 hover:text-primary/80">
+            <Link
+              to="/login"
+              className="text-primary underline underline-offset-4 hover:text-primary/80"
+            >
               {t("auth.signIn")}
             </Link>
           </p>

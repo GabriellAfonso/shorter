@@ -42,7 +42,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 }
 
-// Functional wrapper so hooks (useTranslation) can be used
+// eslint-disable-next-line react-refresh/only-export-components
 function ErrorFallback({ error, onReset }: { error: Error | null; onReset: () => void }) {
   const [labels, setLabels] = useState({
     title: "Something went wrong",

@@ -38,10 +38,20 @@ export function DailyClicksChart({ data }: DailyChartProps) {
         <XAxis dataKey="date" tick={{ fontSize: 11 }} className="text-muted-foreground" />
         <YAxis allowDecimals={false} tick={{ fontSize: 11 }} className="text-muted-foreground" />
         <Tooltip
-          contentStyle={{ backgroundColor: "hsl(var(--card))", borderColor: "hsl(var(--border))", borderRadius: 8 }}
+          contentStyle={{
+            backgroundColor: "hsl(var(--card))",
+            borderColor: "hsl(var(--border))",
+            borderRadius: 8,
+          }}
           labelStyle={{ color: "hsl(var(--foreground))" }}
         />
-        <Area type="monotone" dataKey="clicks" stroke="#3b82f6" fill="url(#clickGradient)" strokeWidth={2} />
+        <Area
+          type="monotone"
+          dataKey="clicks"
+          stroke="#3b82f6"
+          fill="url(#clickGradient)"
+          strokeWidth={2}
+        />
       </AreaChart>
     </ResponsiveContainer>
   );
@@ -52,18 +62,31 @@ interface DeviceChartProps {
 }
 
 export function DeviceChart({ data }: DeviceChartProps) {
-  if (data.length === 0) return <p className="text-sm text-muted-foreground text-center py-8">No data yet.</p>;
+  if (data.length === 0)
+    return <p className="text-sm text-muted-foreground text-center py-8">No data yet.</p>;
 
   return (
     <ResponsiveContainer width="100%" height={200}>
       <PieChart>
-        <Pie data={data} dataKey="count" nameKey="device_type" cx="50%" cy="50%" outerRadius={70} paddingAngle={4}>
+        <Pie
+          data={data}
+          dataKey="count"
+          nameKey="device_type"
+          cx="50%"
+          cy="50%"
+          outerRadius={70}
+          paddingAngle={4}
+        >
           {data.map((_, i) => (
             <Cell key={i} fill={COLORS[i % COLORS.length]} />
           ))}
         </Pie>
         <Tooltip
-          contentStyle={{ backgroundColor: "hsl(var(--card))", borderColor: "hsl(var(--border))", borderRadius: 8 }}
+          contentStyle={{
+            backgroundColor: "hsl(var(--card))",
+            borderColor: "hsl(var(--border))",
+            borderRadius: 8,
+          }}
         />
         <Legend formatter={(v) => <span className="text-xs capitalize">{v}</span>} />
       </PieChart>

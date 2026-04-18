@@ -33,9 +33,16 @@ export function LinkCard({ link }: LinkCardProps) {
     setDeleting(true);
     try {
       await deleteLink(link.id);
-      toast({ title: t("linkCard.linkDeleted"), description: t("linkCard.linkDeletedDesc", { slug: link.slug }) });
+      toast({
+        title: t("linkCard.linkDeleted"),
+        description: t("linkCard.linkDeletedDesc", { slug: link.slug }),
+      });
     } catch {
-      toast({ title: t("linkCard.error"), description: t("linkCard.deleteError"), variant: "destructive" });
+      toast({
+        title: t("linkCard.error"),
+        description: t("linkCard.deleteError"),
+        variant: "destructive",
+      });
     } finally {
       setDeleting(false);
     }
@@ -59,10 +66,14 @@ export function LinkCard({ link }: LinkCardProps) {
                 {link.short_url}
               </a>
               {link.is_expired && (
-                <Badge variant="destructive" className="text-xs">{t("badge.expired")}</Badge>
+                <Badge variant="destructive" className="text-xs">
+                  {t("badge.expired")}
+                </Badge>
               )}
               {!link.is_active && (
-                <Badge variant="secondary" className="text-xs">{t("badge.inactive")}</Badge>
+                <Badge variant="secondary" className="text-xs">
+                  {t("badge.inactive")}
+                </Badge>
               )}
             </div>
 
@@ -73,7 +84,9 @@ export function LinkCard({ link }: LinkCardProps) {
             <div className="flex items-center gap-4 text-xs text-muted-foreground pt-1">
               <span>{t("linkCard.clicks", { n: formatNumber(link.click_count) })}</span>
               <span>{t("linkCard.createdAt", { date: formatDate(link.created_at) })}</span>
-              {link.expires_at && <span>{t("linkCard.expiresAt", { date: formatDate(link.expires_at) })}</span>}
+              {link.expires_at && (
+                <span>{t("linkCard.expiresAt", { date: formatDate(link.expires_at) })}</span>
+              )}
             </div>
           </div>
 

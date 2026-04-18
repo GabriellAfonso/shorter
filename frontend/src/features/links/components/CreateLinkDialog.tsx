@@ -71,7 +71,10 @@ export function CreateLinkDialog({
         expires_at: form.expires_at ? new Date(form.expires_at).toISOString() : null,
       });
 
-      toast({ title: t("createLinkDialog.linkCreated"), description: t("createLinkDialog.linkCreatedDesc", { url: link.short_url }) });
+      toast({
+        title: t("createLinkDialog.linkCreated"),
+        description: t("createLinkDialog.linkCreatedDesc", { url: link.short_url }),
+      });
       setForm(DEFAULT_FORM);
       setShowAdvanced(false);
       onOpenChange?.(false);
@@ -81,7 +84,9 @@ export function CreateLinkDialog({
       )?.response?.data?.error?.details;
       const msg = details
         ? Object.entries(details)
-            .map(([field, errs]) => `${field}: ${Array.isArray(errs) ? errs.join(" ") : String(errs)}`)
+            .map(
+              ([field, errs]) => `${field}: ${Array.isArray(errs) ? errs.join(" ") : String(errs)}`
+            )
             .join("; ")
         : t("createLinkDialog.createError");
       toast({ title: t("createLinkDialog.error"), description: msg, variant: "destructive" });
@@ -161,7 +166,9 @@ export function CreateLinkDialog({
                   type="datetime-local"
                   value={form.expires_at}
                   onChange={handleChange}
-                  min={new Date(Date.now() + 60_000 - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 16)}
+                  min={new Date(Date.now() + 60_000 - new Date().getTimezoneOffset() * 60_000)
+                    .toISOString()
+                    .slice(0, 16)}
                 />
               </div>
             </div>

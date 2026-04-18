@@ -36,9 +36,7 @@ export function LinksPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{t("links.title")}</h1>
           <p className="text-muted-foreground mt-1">
-            {pagination
-              ? t("links.count_other", { count: pagination.count })
-              : ""}
+            {pagination ? t("links.count_other", { count: pagination.count }) : ""}
           </p>
         </div>
 
@@ -59,11 +57,7 @@ export function LinksPage() {
             <Plus className="mr-1 h-4 w-4" />
             {t("links.newLink")}
           </Button>
-          <CreateLinkDialog
-            open={dialogOpen}
-            onOpenChange={setDialogOpen}
-            showTrigger={false}
-          />
+          <CreateLinkDialog open={dialogOpen} onOpenChange={setDialogOpen} showTrigger={false} />
         </div>
       </div>
 

@@ -113,9 +113,7 @@ export function DashboardPage() {
         )}
 
         {!isLoading && recentLinks.length === 0 && (
-          <p className="text-center text-muted-foreground py-8">
-            {t("dashboard.noLinks")}
-          </p>
+          <p className="text-center text-muted-foreground py-8">{t("dashboard.noLinks")}</p>
         )}
 
         <div className="space-y-3">

@@ -39,10 +39,13 @@ export function CreateLinkForm() {
       setTitle("");
       setExpiresAt("");
     } catch (err: unknown) {
-      const details = (err as { response?: { data?: { error?: { details?: Record<string, string[]> } } } })
-        ?.response?.data?.error?.details;
+      const details = (
+        err as { response?: { data?: { error?: { details?: Record<string, string[]> } } } }
+      )?.response?.data?.error?.details;
       const msg = details
-        ? Object.values(details).map(v => Array.isArray(v) ? v.join(" ") : String(v)).join(" ")
+        ? Object.values(details)
+            .map((v) => (Array.isArray(v) ? v.join(" ") : String(v)))
+            .join(" ")
         : t("createLink.createError");
       toast({ title: t("createLink.error"), description: msg, variant: "destructive" });
     } finally {
@@ -113,7 +116,9 @@ export function CreateLinkForm() {
                   type="datetime-local"
                   value={expiresAt}
                   onChange={(e) => setExpiresAt(e.target.value)}
-                  min={new Date(Date.now() + 60_000 - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 16)}
+                  min={new Date(Date.now() + 60_000 - new Date().getTimezoneOffset() * 60_000)
+                    .toISOString()
+                    .slice(0, 16)}
                 />
               </div>
             </div>

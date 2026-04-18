@@ -6,7 +6,14 @@ import { useAuthStore } from "../store/authStore";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/shared/components/ui/card";
 
 export function LoginForm() {
   const { t } = useTranslation();
@@ -89,7 +96,10 @@ export function LoginForm() {
           </Button>
           <p className="text-sm text-muted-foreground text-center">
             {t("auth.noAccount")}{" "}
-            <Link to="/register" className="text-primary underline underline-offset-4 hover:text-primary/80">
+            <Link
+              to="/register"
+              className="text-primary underline underline-offset-4 hover:text-primary/80"
+            >
               {t("auth.signUp")}
             </Link>
           </p>
