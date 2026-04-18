@@ -1,19 +1,20 @@
 """
 Custom DRF throttle classes for the links feature.
 
-ScopedRateThrottle lets us apply different rates to different actions
-(e.g., link creation is tighter than analytics reads) while still
-sharing the same Redis-backed DRF throttle cache.
+UserRateThrottle subclasses are used for authenticated endpoints so the
+scope is fixed at the class level. ScopedRateThrottle is intentionally
+avoided here: its allow_request() overrides self.scope from view.throttle_scope
+which these views do not set, causing the throttle to silently allow all requests.
 
 Redis-based redirect rate limiting is implemented separately in
 `redirect_views.py` using a sliding-window counter via django-redis,
 because the redirect endpoint is a plain Django view (not DRF).
 """
 
-from rest_framework.throttling import AnonRateThrottle, ScopedRateThrottle
+from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 
 
-class LinkCreateThrottle(ScopedRateThrottle):
+class LinkCreateThrottle(UserRateThrottle):
     """
     Tight rate limit on link creation — prevents slug-exhaustion attacks.
     Configured via REST_FRAMEWORK['DEFAULT_THROTTLE_RATES']['link_create'].
@@ -22,7 +23,7 @@ class LinkCreateThrottle(ScopedRateThrottle):
     scope = "link_create"
 
 
-class LinkAnalyticsThrottle(ScopedRateThrottle):
+class LinkAnalyticsThrottle(UserRateThrottle):
     """
     Analytics reads are heavier DB/cache operations; cap per user.
     """
