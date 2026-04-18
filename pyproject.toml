@@ -1,0 +1,6 @@
+[tool.bandit]
+exclude_dirs = ["backend/apps/accounts/tests", "backend/apps/links/tests", "backend/core/tests"]
+skips = ["B101", "B105", "B106", "B311"]
+
+[tool.ruff]
+line-length = 100
