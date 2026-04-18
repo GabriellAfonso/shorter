@@ -6,6 +6,7 @@ Key protections:
   - Scheme: only HTTP/HTTPS allowed.
   - Slug: alphanumeric + hyphen/underscore, no reserved words.
 """
+
 import ipaddress
 import logging
 import re
@@ -25,9 +26,9 @@ BLOCKED_HOSTNAMES = frozenset(
         "localhost",
         "127.0.0.1",
         "::1",
-        "0.0.0.0",
+        "0.0.0.0",  # nosec B104 — SSRF blocklist entry, not a socket bind
         "metadata.google.internal",  # GCP IMDS
-        "169.254.169.254",           # AWS/Azure IMDS (also caught by IP check)
+        "169.254.169.254",  # AWS/Azure IMDS (also caught by IP check)
     }
 )
 
@@ -37,8 +38,8 @@ _PRIVATE_NETWORKS = [
     ipaddress.ip_network("172.16.0.0/12"),
     ipaddress.ip_network("192.168.0.0/16"),
     ipaddress.ip_network("127.0.0.0/8"),
-    ipaddress.ip_network("169.254.0.0/16"),   # link-local / AWS IMDS
-    ipaddress.ip_network("100.64.0.0/10"),    # shared address space
+    ipaddress.ip_network("169.254.0.0/16"),  # link-local / AWS IMDS
+    ipaddress.ip_network("100.64.0.0/10"),  # shared address space
     ipaddress.ip_network("::1/128"),
     ipaddress.ip_network("fc00::/7"),
     ipaddress.ip_network("fe80::/10"),
@@ -46,9 +47,20 @@ _PRIVATE_NETWORKS = [
 
 RESERVED_SLUGS = frozenset(
     {
-        "admin", "api", "static", "media", "login", "logout",
-        "register", "dashboard", "links", "health", "metrics",
-        "favicon", "robots", "sitemap",
+        "admin",
+        "api",
+        "static",
+        "media",
+        "login",
+        "logout",
+        "register",
+        "dashboard",
+        "links",
+        "health",
+        "metrics",
+        "favicon",
+        "robots",
+        "sitemap",
     }
 )
 
@@ -57,6 +69,7 @@ _SLUG_RE = re.compile(r"^[A-Za-z0-9_-]+$")
 
 def _get_max_url_length() -> int:
     from django.conf import settings
+
     return getattr(settings, "MAX_TARGET_URL_LENGTH", 2048)
 
 
@@ -76,7 +89,9 @@ def validate_target_url(url: str) -> str:
     """
     max_length = _get_max_url_length()
     if len(url) > max_length:
-        raise ValidationError({"original_url": _("URL must be at most %(n)s characters.") % {"n": max_length}})
+        raise ValidationError(
+            {"original_url": _("URL must be at most %(n)s characters.") % {"n": max_length}}
+        )
 
     try:
         parsed = urlparse(url)
@@ -85,7 +100,10 @@ def validate_target_url(url: str) -> str:
 
     if parsed.scheme not in ALLOWED_SCHEMES:
         raise ValidationError(
-            {"original_url": _("Only HTTP and HTTPS URLs are permitted (got: '%(scheme)s').") % {"scheme": parsed.scheme}}
+            {
+                "original_url": _("Only HTTP and HTTPS URLs are permitted (got: '%(scheme)s').")
+                % {"scheme": parsed.scheme}
+            }
         )
 
     hostname = (parsed.hostname or "").lower()
@@ -110,7 +128,11 @@ def _assert_public_ip(ip: ipaddress.IPv4Address | ipaddress.IPv6Address) -> None
     for network in _PRIVATE_NETWORKS:
         if ip in network:
             raise ValidationError(
-                {"original_url": _("URLs pointing to private or reserved IP ranges are not allowed.")}
+                {
+                    "original_url": _(
+                        "URLs pointing to private or reserved IP ranges are not allowed."
+                    )
+                }
             )
 
 
@@ -132,6 +154,8 @@ def validate_custom_slug(slug: str) -> str:
         )
 
     if slug.lower() in RESERVED_SLUGS:
-        raise ValidationError({"slug": _("The slug '%(slug)s' is reserved and cannot be used.") % {"slug": slug}})
+        raise ValidationError(
+            {"slug": _("The slug '%(slug)s' is reserved and cannot be used.") % {"slug": slug}}
+        )
 
     return slug
