@@ -1,6 +1,7 @@
 """
 Base Django settings shared across all environments.
 """
+
 import os
 from datetime import timedelta
 from pathlib import Path
@@ -146,7 +147,7 @@ REST_FRAMEWORK = {
         "auth": "10/minute",  # per IP (register + login)
         "link_create": "20/minute",  # per authenticated user
         "link_analytics": "60/minute",  # per authenticated user
-        "redirect": "200/minute",  # per IP (Redis sliding window)
+        "redirect": "200/minute",
     },
 }
 
@@ -167,7 +168,10 @@ SIMPLE_JWT = {
 # ─── Password validation ───────────────────────────────────────────────────
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", "OPTIONS": {"min_length": 6}},
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "OPTIONS": {"min_length": 6},
+    },
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
@@ -222,7 +226,7 @@ LOGGING = {
             "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
             "propagate": False,
         },
-    "django.request": {
+        "django.request": {
             "handlers": ["console"],
             "level": "DEBUG",
             "propagate": False,

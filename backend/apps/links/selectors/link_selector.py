@@ -1,4 +1,5 @@
 """Read-only database queries for the links domain."""
+
 import logging
 from django.core.cache import cache
 from django.db.models import Count, Q, QuerySet, Sum
@@ -53,23 +54,16 @@ def get_link_analytics(link: ShortURL, days: int = 30) -> dict:
     clicks_qs = LinkClick.objects.filter(link=link, timestamp__gte=since)
 
     daily = (
-        clicks_qs
-        .annotate(date=TruncDate("timestamp"))
+        clicks_qs.annotate(date=TruncDate("timestamp"))
         .values("date")
         .annotate(count=Count("id"))
         .order_by("date")
     )
 
-    by_device = (
-        clicks_qs
-        .values("device_type")
-        .annotate(count=Count("id"))
-        .order_by("-count")
-    )
+    by_device = clicks_qs.values("device_type").annotate(count=Count("id")).order_by("-count")
 
     by_referrer = (
-        clicks_qs
-        .exclude(referrer="")
+        clicks_qs.exclude(referrer="")
         .values("referrer")
         .annotate(count=Count("id"))
         .order_by("-count")[:10]
@@ -90,7 +84,7 @@ def get_cached_link_analytics(link: ShortURL, days: int = 30) -> dict:
     Redis-cached wrapper around `get_link_analytics`.
 
     Cache key includes link ID and period so different day-ranges are
-    stored separately. Invalidated automatically by TTL (5 minutes).
+    stored separately. Invalidated automatically by TTL (30 seconds).
     Cache is also invalidated on link deletion via `delete_short_url`.
     """
     key = _ANALYTICS_CACHE_KEY.format(link_id=str(link.id), days=days)
@@ -119,11 +113,13 @@ def get_user_link_stats(user) -> dict:
     """
     qs = ShortURL.objects.filter(owner=user)
     total_clicks = qs.aggregate(total=Sum("click_count"))["total"] or 0
-    active_count = qs.filter(
-        is_active=True,
-    ).filter(
-        Q(expires_at__isnull=True) | Q(expires_at__gte=timezone.now())
-    ).count()
+    active_count = (
+        qs.filter(
+            is_active=True,
+        )
+        .filter(Q(expires_at__isnull=True) | Q(expires_at__gte=timezone.now()))
+        .count()
+    )
     return {"total_clicks": total_clicks, "active_count": active_count}
 
 
