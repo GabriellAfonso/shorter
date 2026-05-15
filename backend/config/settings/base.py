@@ -143,7 +143,7 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         "anon": "60/minute",
         "user": "300/minute",
-        # Feature-scoped rates (ScopedRateThrottle)
+        # Per-action throttle rates (UserRateThrottle/AnonRateThrottle subclasses in apps.links.throttles)
         "auth": "10/minute",  # per IP (register + login)
         "link_create": "20/minute",  # per authenticated user
         "link_analytics": "60/minute",  # per authenticated user
