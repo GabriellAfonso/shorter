@@ -1,0 +1,129 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-urlshortener}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    # Sem expose de porta — acessível apenas pela rede interna do Docker
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-urlshortener}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:8.6-alpine
+    restart: always
+    volumes:
+      - redis_data:/data
+      - ./docker/redis/redis.conf:/usr/local/etc/redis/redis.conf
+    # Sem expose de porta — acessível apenas pela rede interna do Docker
+    command: redis-server /usr/local/etc/redis/redis.conf
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    container_name: shorter-backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      # Usa requirements.txt de produção (sem dev dependencies)
+      args:
+        REQUIREMENTS_FILE: requirements.txt
+    restart: always
+    command:
+      - sh
+      - -c
+      - |
+        python manage.py migrate --noinput &&
+        python manage.py collectstatic --noinput &&
+        gunicorn config.asgi:application \
+          -k uvicorn.workers.UvicornWorker \
+          --bind 0.0.0.0:8000 \
+          --workers 4 \
+          --timeout 60 \
+          --access-logfile - \
+          --error-logfile -
+    env_file:
+      - .env
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-urlshortener}
+      REDIS_URL: redis://redis:6379/0
+      # localhost necessário para o Docker HEALTHCHECK interno
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS},localhost
+      # SSL é responsabilidade do nginx externo, não do Django
+      SECURE_SSL_REDIRECT: "False"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - default
+      - proxy-network
+
+  frontend:
+    container_name: shorter-frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: /shorter/api/v1
+        VITE_BASE_PATH: /shorter/
+    volumes:
+      - ./frontend_dist:/output
+    restart: "no"
+
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        REQUIREMENTS_FILE: requirements.txt
+    restart: always
+    command: celery -A config.celery worker --loglevel=info --concurrency=4 -Q default,clicks
+    env_file:
+      - .env
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-urlshortener}
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  celery_beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        REQUIREMENTS_FILE: requirements.txt
+    restart: always
+    command: celery -A config.celery beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    env_file:
+      - .env
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-urlshortener}
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      - celery_worker
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  proxy-network:
+    external: true
