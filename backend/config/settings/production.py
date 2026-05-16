@@ -1,4 +1,5 @@
 """Production settings — hardened security, no debug."""
+
 import os
 
 from django.core.exceptions import ImproperlyConfigured
@@ -10,9 +11,7 @@ DEBUG = False
 # ─── Required environment variables ───────────────────────────────────────
 _secret = os.environ.get("SECRET_KEY")
 if not _secret:
-    raise ImproperlyConfigured(
-        "SECRET_KEY environment variable must be set in production."
-    )
+    raise ImproperlyConfigured("SECRET_KEY environment variable must be set in production.")
 SECRET_KEY = _secret
 SIMPLE_JWT["SIGNING_KEY"] = SECRET_KEY  # noqa: F405 — fix early capture in base.py
 
@@ -37,7 +36,9 @@ X_FRAME_OPTIONS = "DENY"
 SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
 
 # ─── CORS ─────────────────────────────────────────────────────────────────
-CORS_ALLOWED_ORIGINS = [o.strip() for o in os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",") if o.strip()]
+CORS_ALLOWED_ORIGINS = [
+    o.strip() for o in os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",") if o.strip()
+]
 CORS_ALLOW_CREDENTIALS = True
 
 # ─── API Docs — correct public server prefix behind nginx reverse proxy ────
@@ -60,3 +61,39 @@ LOGGING = {
     },
 }
 
+# ─── Benchmark toggles (env-driven) ────────────────────────────────────────
+# Both default to safe production behavior. Flip via .env when load-testing.
+#
+#   BENCHMARK_MODE=true   → bypass per-IP redirect rate limiter
+#   CACHE_REDIS=false     → swap Redis cache for DummyCache (no caching)
+#
+# WARNING: leaving BENCHMARK_MODE=true or CACHE_REDIS=false in production
+# disables protections / degrades performance. Always revert after testing.
+
+
+def _env_bool(name: str, default: str) -> bool:
+    return os.environ.get(name, default).strip().lower() == "true"
+
+
+BENCHMARK_MODE = _env_bool("BENCHMARK_MODE", "false")
+CACHE_REDIS = _env_bool("CACHE_REDIS", "true")
+
+if BENCHMARK_MODE:
+    BENCHMARK_DISABLE_RATE_LIMIT = True
+    import logging as _logging
+
+    _logging.getLogger(__name__).warning(
+        "BENCHMARK_MODE active — redirect rate limiter is DISABLED."
+    )
+
+if not CACHE_REDIS:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.dummy.DummyCache",
+        }
+    }
+    import logging as _logging
+
+    _logging.getLogger(__name__).warning(
+        "CACHE_REDIS=false — using DummyCache, every redirect hits the DB."
+    )

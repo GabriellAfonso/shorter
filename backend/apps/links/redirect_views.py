@@ -13,6 +13,7 @@ Flow:
   4. Fire Celery task to log click (non-blocking).
   5. Return HTTP 302.
 """
+
 import logging
 from django.conf import settings
 from django.http import HttpResponse, HttpResponseNotFound, HttpResponseRedirect
@@ -38,9 +39,15 @@ def _is_rate_limited(ip: str) -> bool:
     Sliding-window rate limiter using Redis INCR + EXPIRE.
     Returns True when the caller exceeds the configured limit.
     Degrades gracefully to allow requests if Redis is unreachable.
+
+    Skipped entirely when settings.BENCHMARK_DISABLE_RATE_LIMIT is True.
     """
+    if getattr(settings, "BENCHMARK_DISABLE_RATE_LIMIT", False):
+        return False
+
     try:
         from django_redis import get_redis_connection
+
         redis = get_redis_connection("default")
         key = f"rl:redirect:{ip}"
         pipe = redis.pipeline()
