@@ -1,0 +1,118 @@
+# ─── Isolated benchmark stack ───────────────────────────────────────────────
+# Goal: measure the CODE under controlled, reproducible resources so the
+# numbers are portable across hardware (CV-friendly metrics).
+#
+# Pinned:
+#   - backend: 1 vCPU, 1G RAM   (the "code" under test)
+# Unlimited (so they don't become the bottleneck):
+#   - postgres, redis
+#
+# Cache toggle:
+#   - CACHE_REDIS=true   (default) → Redis cache active (hot path)
+#   - CACHE_REDIS=false           → DummyCache, every request hits DB
+#
+# Auto-bootstrap on `up`: migrate → create bench user → create_test_slugs.
+#
+# Usage:
+#   docker compose -f docker-compose.bench.yml up -d --build
+#   docker compose -f docker-compose.bench.yml logs -f backend
+#
+# Cache OFF run:
+#   CACHE_REDIS=false docker compose -f docker-compose.bench.yml up -d --build
+#
+# Tear down:
+#   docker compose -f docker-compose.bench.yml down -v
+
+name: shorter-bench
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    command: postgres -c max_connections=200 -c shared_buffers=128MB
+    environment:
+      POSTGRES_DB: benchdb
+      POSTGRES_USER: bench
+      POSTGRES_PASSWORD: bench
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U bench -d benchdb" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:8.6-alpine
+    command: redis-server --save "" --appendonly no
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        REQUIREMENTS_FILE: requirements.txt
+    ports:
+      - "8000:8000"
+    command:
+      - sh
+      - -c
+      - |
+        set -e
+        python manage.py migrate --noinput
+        python manage.py shell -c "from django.contrib.auth import get_user_model; U=get_user_model(); U.objects.filter(email='bench@bench.local').exists() or U.objects.create_user(email='bench@bench.local', password='benchpass-not-for-prod')"
+        python manage.py create_test_slugs
+        exec gunicorn config.asgi:application \
+          -k uvicorn.workers.UvicornWorker \
+          --bind 0.0.0.0:8000 \
+          --workers 2 \
+          --timeout 60 \
+          --access-logfile - \
+          --error-logfile -
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      SECRET_KEY: bench-secret-do-not-use-in-prod
+      SHORT_URL_BASE_DOMAIN: http://localhost:8000
+      ALLOWED_HOSTS: localhost,127.0.0.1,backend
+      DATABASE_URL: postgresql://bench:bench@postgres:5432/benchdb
+      REDIS_URL: redis://redis:6379/0
+      BENCHMARK_MODE: "true"
+      CACHE_REDIS: "${CACHE_REDIS:-false}"
+      SECURE_SSL_REDIRECT: "False"
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        REQUIREMENTS_FILE: requirements.txt
+    # Override the image's HTTP healthcheck — celery does not serve HTTP.
+    healthcheck:
+      disable: true
+    command: celery -A config.celery worker --loglevel=info --concurrency=2 -Q default,clicks
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      SECRET_KEY: bench-secret-do-not-use-in-prod
+      SHORT_URL_BASE_DOMAIN: http://localhost:8000
+      ALLOWED_HOSTS: localhost,127.0.0.1,backend
+      DATABASE_URL: postgresql://bench:bench@postgres:5432/benchdb
+      REDIS_URL: redis://redis:6379/0
+      BENCHMARK_MODE: "true"
+      CACHE_REDIS: "${CACHE_REDIS:-true}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
