@@ -14,14 +14,11 @@
  *   - 429:     rate-limited (set BENCHMARK_MODE=true to disable)
  *   - 5xx:     server error / saturation
  *
- * Stages (each 20s + 5s cooldown), focused on the saturation zone:
+ * Stages (each 20s + 5s cooldown):
  *   stage_10   →   10 RPS
  *   stage_50   →   50 RPS
  *   stage_100  →  100 RPS
  *   stage_150  →  150 RPS
- *   stage_200  →  200 RPS
- *   stage_300  →  300 RPS
- *   stage_500  →  500 RPS
  *
  * Run: k6 run benchmark.js
  */
@@ -41,7 +38,7 @@ const SLUGS = Array.from({ length: 100 }, (_, i) =>
 const randomSlug = () => SLUGS[Math.floor(Math.random() * SLUGS.length)];
 
 // ─── Metrics ─────────────────────────────────────────────────────────────────
-const RATES = [10, 50, 100, 150, 200, 300, 500];
+const RATES = [10, 50, 100, 150];
 
 const trends = {};
 const counters = {};
@@ -93,7 +90,7 @@ export const options = {
 
 // ─── Request runner ──────────────────────────────────────────────────────────
 function runAt(rate) {
-  const res = http.get(`${BASE_URL}/s/${randomSlug()}`, { redirects: 0 });
+  const res = http.get(`${BASE_URL}/s/${randomSlug()}/`, { redirects: 0 });
 
   const s = res.status;
   if (s >= 200 && s < 300) status2xx[rate].add(1);
@@ -113,9 +110,6 @@ export function run_10()  { runAt(10); }
 export function run_50()  { runAt(50); }
 export function run_100() { runAt(100); }
 export function run_150() { runAt(150); }
-export function run_200() { runAt(200); }
-export function run_300() { runAt(300); }
-export function run_500() { runAt(500); }
 
 // ─── Summary ─────────────────────────────────────────────────────────────────
 export function handleSummary(data) {
