@@ -25,7 +25,10 @@
     "loginFailed": "Login failed",
     "invalidCredentials": "Invalid email or password.",
     "registrationFailed": "Registration failed",
-    "registrationFailedMsg": "Registration failed. Please try again."
+    "registrationFailedMsg": "Registration failed. Please try again.",
+    "continueAsGuest": "Continue as guest",
+    "guestRateLimited": "Too many guest sessions from this network. Try again later.",
+    "guestFailed": "Could not start guest session. Please try again."
   },
   "dashboard": {
     "welcomeBack": "Welcome back, {{name}}",

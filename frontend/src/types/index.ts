@@ -8,6 +8,7 @@ export interface User {
   full_name: string;
   bio: string;
   avatar_url: string;
+  is_guest: boolean;
   links_count: number;
   date_joined: string;
   created_at: string;

@@ -4,7 +4,7 @@
  */
 import { create } from "zustand";
 import type { User, LoginPayload, RegisterPayload } from "@/types";
-import { loginApi, logoutApi, getMeApi, registerApi } from "../api/authApi";
+import { guestLoginApi, loginApi, logoutApi, getMeApi, registerApi } from "../api/authApi";
 
 interface AuthState {
   user: User | null;
@@ -13,6 +13,7 @@ interface AuthState {
 
   login: (payload: LoginPayload) => Promise<void>;
   register: (payload: RegisterPayload) => Promise<void>;
+  loginAsGuest: () => Promise<void>;
   logout: () => Promise<void>;
   fetchMe: () => Promise<void>;
   hydrateFromStorage: () => Promise<void>;
@@ -49,10 +50,28 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
+  loginAsGuest: async () => {
+    set({ isLoading: true });
+    try {
+      const existing = localStorage.getItem("access_token");
+      const data = await guestLoginApi(existing);
+      localStorage.setItem("access_token", data.tokens.access);
+      localStorage.setItem("refresh_token", data.tokens.refresh);
+      sessionStorage.setItem("just_logged_in", "1");
+      set({ user: data.user, isAuthenticated: true });
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
   logout: async () => {
     const refresh = localStorage.getItem("refresh_token") ?? "";
+    const { user } = useAuthStore.getState();
+    const isGuestSession = !!user?.is_guest;
     try {
-      await logoutApi(refresh);
+      if (!isGuestSession) {
+        await logoutApi(refresh);
+      }
     } catch {
       // Ignore errors on logout (token might already be expired)
     } finally {

@@ -15,6 +15,14 @@ export async function registerApi(
   return data;
 }
 
+export async function guestLoginApi(
+  existingAccess?: string | null
+): Promise<{ tokens: AuthTokens; user: User }> {
+  const headers = existingAccess ? { Authorization: `Bearer ${existingAccess}` } : undefined;
+  const { data } = await apiClient.post("/auth/guest/", {}, { headers });
+  return data;
+}
+
 export async function logoutApi(refresh: string): Promise<void> {
   await apiClient.post("/auth/logout/", { refresh });
 }

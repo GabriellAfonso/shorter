@@ -17,7 +17,7 @@ import {
 
 export function LoginForm() {
   const { t } = useTranslation();
-  const { login, isLoading } = useAuthStore();
+  const { login, loginAsGuest, isLoading } = useAuthStore();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -41,6 +41,17 @@ export function LoginForm() {
         (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ??
         t("auth.invalidCredentials");
       setPassword("");
+      showError(message);
+    }
+  };
+
+  const handleGuest = async () => {
+    try {
+      await loginAsGuest();
+      navigate("/dashboard");
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      const message = status === 429 ? t("auth.guestRateLimited") : t("auth.guestFailed");
       showError(message);
     }
   };
@@ -93,6 +104,15 @@ export function LoginForm() {
         <CardFooter className="flex flex-col gap-4">
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? t("auth.signingIn") : t("auth.signIn")}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            disabled={isLoading}
+            onClick={handleGuest}
+          >
+            {t("auth.continueAsGuest")}
           </Button>
           <p className="text-sm text-muted-foreground text-center">
             {t("auth.noAccount")}{" "}

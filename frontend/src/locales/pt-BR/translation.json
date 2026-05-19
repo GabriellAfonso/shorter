@@ -25,7 +25,10 @@
     "loginFailed": "Falha no login",
     "invalidCredentials": "E-mail ou senha inv\u00e1lidos.",
     "registrationFailed": "Falha no cadastro",
-    "registrationFailedMsg": "Falha no cadastro. Tente novamente."
+    "registrationFailedMsg": "Falha no cadastro. Tente novamente.",
+    "continueAsGuest": "Entrar como convidado",
+    "guestRateLimited": "Muitas sess\u00f5es de convidado desta rede. Tente novamente mais tarde.",
+    "guestFailed": "N\u00e3o foi poss\u00edvel iniciar a sess\u00e3o de convidado. Tente novamente."
   },
   "dashboard": {
     "welcomeBack": "Bem-vindo de volta, {{name}}",
