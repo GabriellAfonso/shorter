@@ -145,6 +145,7 @@ REST_FRAMEWORK = {
         "user": "300/minute",
         # Per-action throttle rates (UserRateThrottle/AnonRateThrottle subclasses in apps.links.throttles)
         "auth": "10/minute",  # per IP (register + login)
+        "guest": "10/hour",  # per IP (guest account creation)
         "link_create": "20/minute",  # per authenticated user
         "link_analytics": "60/minute",  # per authenticated user
         "redirect": "200/minute",
@@ -251,3 +252,8 @@ REDIRECT_CACHE_TTL = 60 * 60 * 24  # 24 hours in seconds
 REDIRECT_RATE_LIMIT = 100  # requests per minute per IP
 MAX_LINKS_PER_USER = int(os.environ.get("MAX_LINKS_PER_USER", "30"))
 MAX_TARGET_URL_LENGTH = 2048
+
+# ─── Guest account limits ──────────────────────────────────────────────────
+GUEST_MAX_LINKS = int(os.environ.get("GUEST_MAX_LINKS", "10"))
+GUEST_LINK_TTL_HOURS = int(os.environ.get("GUEST_LINK_TTL_HOURS", "24"))
+GUEST_ACCOUNT_PURGE_HOURS = int(os.environ.get("GUEST_ACCOUNT_PURGE_HOURS", "48"))

@@ -39,3 +39,13 @@ class AuthRateThrottle(AnonRateThrottle):
     """
 
     scope = "auth"
+
+
+class GuestCreateThrottle(AnonRateThrottle):
+    """
+    IP-based rate limit for guest account creation.
+    Lower budget over a longer window to discourage row farming.
+    Configured via REST_FRAMEWORK['DEFAULT_THROTTLE_RATES']['guest'].
+    """
+
+    scope = "guest"

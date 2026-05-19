@@ -1,11 +1,17 @@
 """Business logic for user management."""
 
 import logging
+import secrets
+import uuid
+
 from django.contrib.auth import get_user_model
 from rest_framework.exceptions import ValidationError
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
+
+GUEST_EMAIL_DOMAIN = "guest.local"
+GUEST_EMAIL_PREFIX = "guest_"
 
 
 def create_user(*, email: str, password: str, first_name: str = "", last_name: str = ""):
@@ -21,6 +27,22 @@ def create_user(*, email: str, password: str, first_name: str = "", last_name: s
         last_name=last_name,
     )
     logger.info("New user registered: %s (id=%s)", email, user.pk)
+    return user
+
+
+def create_guest_user():
+    """
+    Create an ephemeral guest account with a random email + password.
+    The password is discarded after creation (login is via JWT only).
+    """
+    email = f"{GUEST_EMAIL_PREFIX}{uuid.uuid4().hex}@{GUEST_EMAIL_DOMAIN}"
+    password = secrets.token_urlsafe(32)
+    user = User.objects.create_user(
+        email=email,
+        password=password,
+        is_guest=True,
+    )
+    logger.info("New guest user created: %s (id=%s)", email, user.pk)
     return user
 
 

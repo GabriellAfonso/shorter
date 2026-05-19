@@ -4,6 +4,8 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
+from apps.accounts.services.user_service import GUEST_EMAIL_DOMAIN, GUEST_EMAIL_PREFIX
+
 User = get_user_model()
 
 
@@ -32,9 +34,14 @@ class RegisterSerializer(serializers.Serializer):
     )
 
     def validate_email(self, value: str) -> str:
-        if User.objects.filter(email__iexact=value).exists():
+        normalized = value.lower()
+        if normalized.startswith(GUEST_EMAIL_PREFIX) or normalized.endswith(
+            f"@{GUEST_EMAIL_DOMAIN}"
+        ):
+            raise serializers.ValidationError(_("This email is reserved."))
+        if User.objects.filter(email__iexact=normalized).exists():
             raise serializers.ValidationError(_("A user with this email already exists."))
-        return value.lower()
+        return normalized
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -51,6 +58,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             "first_name": self.user.first_name,
             "last_name": self.user.last_name,
             "full_name": self.user.get_full_name(),
+            "is_guest": self.user.is_guest,
         }
         return data
 

@@ -21,6 +21,7 @@ REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {  # noqa: F405
     "anon": "1000/minute",
     "user": "5000/minute",
     "auth": "10/minute",
+    "guest": "1000/hour",
     "link_create": "100/minute",
     "link_analytics": "500/minute",
 }
