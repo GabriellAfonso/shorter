@@ -9,13 +9,15 @@ Design decisions:
 - Analytics cache is invalidated when a link is deleted.
 - Click logging is intentionally async (Celery) so the redirect is never blocked.
 """
+
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from django.conf import settings
 from django.core.cache import cache
 from django.db import transaction
 from django.db.models import F
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from rest_framework.exceptions import ValidationError
 
@@ -52,24 +54,41 @@ def create_short_url(
     If `custom_slug` is provided it is validated for uniqueness.
     Otherwise a random slug is generated (up to 5 retries on collision).
     """
+    is_guest = bool(getattr(owner, "is_guest", False))
+
     # ── Quota: enforce per-user active link limit ────────────────────────────
-    max_links = getattr(settings, "MAX_LINKS_PER_USER", 30)
+    if is_guest:
+        max_links = getattr(settings, "GUEST_MAX_LINKS", 10)
+    else:
+        max_links = getattr(settings, "MAX_LINKS_PER_USER", 30)
     active_count = ShortURL.objects.filter(owner=owner, is_active=True).count()
     if active_count >= max_links:
         raise QuotaExceeded(
-            _("You have reached the limit of %(n)s active links. Delete some links to create new ones.") % {"n": max_links}
+            _(
+                "You have reached the limit of %(n)s active links. Delete some links to create new ones."
+            )
+            % {"n": max_links}
         )
 
     # ── Security: validate target URL (SSRF / scheme / length) ─────────────
     validate_target_url(original_url)
 
+    if is_guest and custom_slug:
+        raise ValidationError({"slug": _("Guest accounts cannot use custom slugs.")})
+
     if custom_slug:
         validate_custom_slug(custom_slug)
         if slug_exists(custom_slug):
-            raise ValidationError({"slug": _("The slug '%(slug)s' is already taken.") % {"slug": custom_slug}})
+            raise ValidationError(
+                {"slug": _("The slug '%(slug)s' is already taken.") % {"slug": custom_slug}}
+            )
         slug = custom_slug
     else:
         slug = _generate_unique_slug()
+
+    if is_guest:
+        ttl_hours = getattr(settings, "GUEST_LINK_TTL_HOURS", 24)
+        expires_at = timezone.now() + timedelta(hours=ttl_hours)
 
     link = ShortURL.objects.create(
         original_url=original_url,
@@ -168,6 +187,7 @@ def _compute_ttl(link: ShortURL) -> int:
     default_ttl = getattr(settings, "REDIRECT_CACHE_TTL", 86400)
     if link.expires_at:
         from django.utils import timezone
+
         remaining = int((link.expires_at - timezone.now()).total_seconds())
         return max(1, min(remaining, default_ttl))
     return default_ttl
@@ -177,6 +197,7 @@ def _infer_title(url: str) -> str:
     """Best-effort title from URL (just the domain)."""
     try:
         from urllib.parse import urlparse
+
         return urlparse(url).netloc
     except Exception:
         return ""
@@ -186,6 +207,7 @@ def _parse_user_agent(ua_string: str) -> dict:
     """Parse user-agent string into device metadata."""
     try:
         import user_agents
+
         ua = user_agents.parse(ua_string)
         if ua.is_bot:
             device_type = "bot"
