@@ -28,3 +28,8 @@ class AdminUserFactory(UserFactory):
     is_staff = True
     is_superuser = True
     email = factory.Sequence(lambda n: f"admin{n}@example.com")
+
+
+class GuestUserFactory(UserFactory):
+    is_guest = True
+    email = factory.Sequence(lambda n: f"guest_{n:032x}@guest.local")

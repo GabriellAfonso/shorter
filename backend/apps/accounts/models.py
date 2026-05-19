@@ -1,4 +1,5 @@
 """Custom user model — email as the primary identifier (no username)."""
+
 from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
 
@@ -38,6 +39,7 @@ class User(AbstractUser):
     email = models.EmailField("email address", unique=True)
     bio = models.TextField(blank=True)
     avatar_url = models.URLField(blank=True)
+    is_guest = models.BooleanField(default=False, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
