@@ -2,7 +2,7 @@
 Fast redirect view — plain Django (no DRF serialisation overhead).
 
 Security additions (Part 2):
-  - Redis sliding-window rate limit per client IP (REDIRECT_RATE_LIMIT req/min).
+  - Redis fixed-window rate limit per client IP (REDIRECT_RATE_LIMIT req/min).
   - Structured 429 response with Retry-After header.
   - Slug validated at URL-conf level (regex in redirect_urls.py).
 
@@ -36,7 +36,7 @@ def _get_rate_limit() -> int:
 
 def _is_rate_limited(ip: str) -> bool:
     """
-    Sliding-window rate limiter using Redis INCR + EXPIRE.
+    Fixed-window rate limiter using Redis INCR + EXPIRE.
     Returns True when the caller exceeds the configured limit.
     Degrades gracefully to allow requests if Redis is unreachable.
 
